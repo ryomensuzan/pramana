@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="app.staff.ProfileController"
+      spacing="20"
+      styleClass="content-area">
+
+    <!-- HEADER -->
+    <Label text="My Profile"
+           styleClass="label heading"/>
+
+    <!-- PROFILE DETAILS -->
+    <GridPane hgap="16" vgap="14">
+
+        <Label text="Username:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <Label fx:id="usernameLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Role:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <Label fx:id="roleLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Counter No:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <Label fx:id="counterLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Status:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <Label fx:id="statusLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Account Created:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <Label fx:id="createdAtLabel" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+    </GridPane>
+
+    <Separator/>
+
+</VBox>

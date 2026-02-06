@@ -1,0 +1,153 @@
+/* ===============================
+   GLOBAL
+   =============================== */
+.root {
+    -fx-font-family: "Segoe UI", "Inter", "Roboto", sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #f4f6f9;
+}
+
+/* ===============================
+   TOP BAR
+   =============================== */
+.top-bar {
+    -fx-background-color: #1f3a5f;
+    -fx-padding: 12 20;
+}
+.title{
+-fx-text-fill:white;
+}
+
+.top-bar Label {
+    -fx-text-fill: white;
+    -fx-font-size: 17px;
+    -fx-font-weight: 600;
+}
+
+/* ===============================
+   SIDEBAR
+   =============================== */
+.sidebar {
+    -fx-background-color: #ffffff;
+    -fx-padding: 14;
+    -fx-spacing: 8;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* ===============================
+   SIDEBAR BUTTONS
+   =============================== */
+.sub-nav {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1f2937;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 9 12;
+    -fx-background-radius: 6;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+/* hover */
+.sub-nav:hover {
+    -fx-background-color: #e5efff;
+}
+
+/* pressed */
+.sub-nav:pressed {
+    -fx-background-color: #dbeafe;
+}
+
+/* active (you set this class manually) */
+.sub-nav.active {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+}
+
+/* ===============================
+   TITLED PANE
+   =============================== */
+.titled-pane {
+    -fx-text-fill: #374151;
+    -fx-font-weight: 600;
+}
+
+.titled-pane > .title {
+    -fx-background-color: transparent;
+    -fx-padding: 6 10;
+}
+
+.titled-pane > *.content {
+    -fx-background-color: transparent;
+    -fx-padding: 6 0 6 10;
+}
+
+/* ===============================
+   MAIN CONTENT AREA
+   =============================== */
+.content-area {
+    -fx-background-color: #ffffff;
+    -fx-padding: 24;
+}
+
+/* ===============================
+   HEADINGS / LABELS
+   =============================== */
+.label {
+    -fx-text-fill: #1f2937;
+}
+
+.label.heading {
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+}
+
+/* ===============================
+   TABLE VIEW
+   =============================== */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #f9fafb;
+}
+
+.table-view .column-header {
+    -fx-font-weight: 600;
+    -fx-text-fill: #374151;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #bfdbfe;
+}
+
+/* ===============================
+   PRIMARY BUTTON
+   =============================== */
+.btn-primary {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 6;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #2563eb;
+}
+
+/* ===============================
+   DANGER BUTTON (LOGOUT)
+   =============================== */
+.btn-danger {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #dc2626;
+}

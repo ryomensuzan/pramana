@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.staff.CreateBillController"
+            styleClass="content-area">
+
+    <!-- Patient Info -->
+    <top>
+        <VBox spacing="5">
+            <Label fx:id="patientLabel"
+                   styleClass="label heading"/>
+            <Label fx:id="counterLabel"/>
+        </VBox>
+    </top>
+
+    <!-- Center Billing Table -->
+    <center>
+        <TableView fx:id="billTable">
+            <columns>
+                <TableColumn fx:id="serviceCol" text="Service" prefWidth="200"/>
+                <TableColumn fx:id="priceCol" text="Price" prefWidth="100"/>
+                <TableColumn fx:id="qtyCol" text="Qty" prefWidth="80"/>
+                <TableColumn fx:id="totalCol" text="Total" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <!-- Right Panel -->
+    <right>
+        <VBox spacing="10" prefWidth="240">
+
+            <Label text="Add Service"
+                   styleClass="label"/>
+
+            <ComboBox fx:id="categoryBox"
+                      promptText="Select Category"/>
+
+            <ComboBox fx:id="serviceBox"
+                      promptText="Select Service"/>
+
+            <TextField fx:id="qtyField"
+                       promptText="Quantity"/>
+
+            <Button text="Add Service"
+                    onAction="#handleAddService"
+                    styleClass="btn-primary"/>
+
+            <Separator/>
+
+            <Label fx:id="grandTotalLabel"
+                   text="Grand Total: 0.00"
+                   styleClass="label heading"/>
+
+            <Button text="Save Draft"
+                    onAction="#handleSaveDraft"/>
+
+            <Button text="Generate Prebill"
+                    onAction="#handleGeneratePrebill"
+                    styleClass="btn-primary"/>
+
+        </VBox>
+    </right>
+
+</BorderPane>

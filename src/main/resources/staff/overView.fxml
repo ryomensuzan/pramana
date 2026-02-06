@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.staff.OverviewController"
+            prefWidth="1200" prefHeight="800"
+            styleClass="content-area">
+
+    <!-- HEADER -->
+    <top>
+        <Label text="Staff Overview"
+               styleClass="label heading"
+               BorderPane.alignment="CENTER"/>
+    </top>
+
+    <center>
+        <GridPane hgap="20" vgap="20" alignment="CENTER">
+
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="0"
+                  spacing="10"
+                  styleClass="content-area">
+                <Label text="Patients Registered Today"/>
+                <Label fx:id="todayPatientsLabel"
+                       styleClass="label heading"/>
+            </VBox>
+
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="1"
+                  spacing="10"
+                  styleClass="content-area">
+                <Label text="Bills Finalized Today"/>
+                <Label fx:id="todayBillsLabel"
+                       styleClass="label heading"/>
+            </VBox>
+
+            <VBox GridPane.rowIndex="1" GridPane.columnIndex="0"
+                  spacing="10"
+                  styleClass="content-area">
+                <Label text="Today's Collection"/>
+                <Label fx:id="todayCollectionLabel"
+                       styleClass="label heading"/>
+            </VBox>
+
+            <VBox GridPane.rowIndex="1" GridPane.columnIndex="1"
+                  spacing="10"
+                  styleClass="content-area">
+                <Label text="Active Services"/>
+                <Label fx:id="activeServicesLabel"
+                       styleClass="label heading"/>
+            </VBox>
+
+        </GridPane>
+    </center>
+
+</BorderPane>

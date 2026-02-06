@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.admin.ServiceCategoryController"
+            prefWidth="700"
+            prefHeight="500">
+
+    <!-- Top -->
+    <top>
+        <Label text="Service Category Management"
+               style="-fx-font-size:18px; -fx-padding:10; -fx-font-weight:bold;" />
+    </top>
+
+    <!-- Form -->
+    <center>
+        <VBox spacing="10" style="-fx-padding:20;">
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Category Name:" />
+                <TextField fx:id="categoryNameField" GridPane.columnIndex="1"/>
+
+                <Label text="Description:" GridPane.rowIndex="1"/>
+                <TextArea fx:id="descriptionField"
+                          GridPane.columnIndex="1"
+                          GridPane.rowIndex="1"
+                          prefRowCount="3"/>
+            </GridPane>
+
+            <HBox spacing="10">
+                <Button text="Save Category"
+                        onAction="#handleSaveCategory"/>
+                <Button text="Clear"
+                        onAction="#handleClear"/>
+            </HBox>
+
+            <Label fx:id="messageLabel"/>
+
+            <Separator/>
+
+            <!-- Table -->
+            <TableView fx:id="categoryTable" prefHeight="250">
+                <columns>
+                    <TableColumn fx:id="idColumn" text="ID" prefWidth="60"/>
+                    <TableColumn fx:id="nameColumn" text="Category Name" prefWidth="180"/>
+                    <TableColumn fx:id="descColumn" text="Description" prefWidth="250"/>
+                    <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+                </columns>
+            </TableView>
+
+        </VBox>
+    </center>
+
+</BorderPane>

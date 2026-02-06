@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="app.LogoutController"
+      alignment="CENTER"
+      spacing="20"
+      style="-fx-padding:30;">
+
+    <Label text="Are you sure you want to logout?"
+           style="-fx-font-size:16; -fx-font-weight:bold;"/>
+
+    <HBox spacing="15" alignment="CENTER">
+        <Button text="Yes, Logout" onAction="#confirmLogout"/>
+        <Button text="Cancel" onAction="#cancel"/>
+    </HBox>
+
+</VBox>

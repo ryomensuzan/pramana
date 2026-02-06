@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.admin.AdminDashboardController">
+
+    <!-- Top Bar -->
+    <top>
+        <HBox spacing="10"
+              alignment="CENTER_LEFT"
+              styleClass="top-bar">
+            <Label text="Pramanā Prebilling System"/>
+        </HBox>
+    </top>
+
+    <!-- Left Menu -->
+    <left>
+        <VBox fx:id="sidebar"
+              spacing="10"
+              prefWidth="200"
+              styleClass="sidebar">
+
+            <TitledPane text="Staff Management" expanded="false">
+                <content>
+                    <VBox spacing="8">
+                        <Button fx:id="staffListBtn"
+                                text="Staff List"
+                                onAction="#openStaffList"
+                                styleClass="sub-nav"/>
+                        <Button fx:id="manageStaffBtn"
+                                text="Manage Staff"
+                                onAction="#openStaffStatus"
+                                styleClass="sub-nav"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+            <TitledPane text="Services Management" expanded="false">
+                <content>
+                    <VBox spacing="8">
+                        <Button fx:id="manageServiceBtn"
+                                text="Manage Service"
+                                onAction="#openManageService"
+                                styleClass="sub-nav"/>
+                        <Button fx:id="serviceCategoryBtn"
+                                text="Service Category"
+                                onAction="#openServiceCategory"
+                                styleClass="sub-nav"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+            <TitledPane text="Settings" expanded="false">
+                <content>
+                    <VBox spacing="8">
+                        <Button fx:id="hospitalProfileBtn"
+                                text="Hospital Profile"
+                                onAction="#openHospitalProfile"
+                                styleClass="sub-nav"/>
+                        <Button fx:id="invoiceSettingsBtn"
+                                text="Invoice Settings"
+                                onAction="#openInvoiceSettings"
+                                styleClass="sub-nav"/>
+                        <Button fx:id="backupRestoreBtn"
+                                text="BackUp and Restore"
+                                onAction="#openBackupRestore"
+                                styleClass="sub-nav"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+            <TitledPane text="Profile" expanded="false">
+                <content>
+                    <VBox spacing="8">
+                        <Button fx:id="profileBtn"
+                                text="Profile"
+                                onAction="#openProfile"
+                                styleClass="sub-nav"/>
+                        <Button fx:id="changePasswordBtn"
+                                text="Change Password"
+                                onAction="#openChangePassword"
+                                styleClass="sub-nav"/>
+                        <Button fx:id="logoutBtn"
+                                text="Logout"
+                                onAction="#logout"
+                                styleClass="sub-nav"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+        </VBox>
+    </left>
+
+    <!-- Main Content Area -->
+    <center>
+        <StackPane fx:id="contentArea"
+                   styleClass="content-area">
+            <Label text="Welcome to Pramanā Dashboard Admin Dashboard"/>
+        </StackPane>
+    </center>
+
+</BorderPane>

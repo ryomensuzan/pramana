@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.staff.PendingBillsController"
+            styleClass="content-area">
+
+    <top>
+        <HBox spacing="10">
+            <TextField fx:id="searchField" promptText="Search patient"/>
+            <Button text="Search"
+                    onAction="#handleSearch"
+                    styleClass="btn-primary"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="table">
+            <columns>
+                <TableColumn fx:id="codeCol" text="Patient Code" prefWidth="200"/>
+                <TableColumn fx:id="nameCol" text="Patient Name" prefWidth="200"/>
+                <TableColumn fx:id="totalCol" text="Total" prefWidth="140"/>
+                <TableColumn fx:id="timeCol" text="Bill Time" prefWidth="140"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox spacing="15" alignment="CENTER">
+            <Button text="Edit Bill"
+                    styleClass="btn-primary"
+                    onAction="#handleEdit"/>
+            <Button text="Final Bill"
+                    onAction="#handleFinal"
+                    styleClass="btn-primary"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

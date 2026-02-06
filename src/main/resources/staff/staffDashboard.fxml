@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.staff.StaffDashboardController">
+
+    <!-- LEFT SIDEBAR  -->
+    <left>
+        <VBox fx:id="sidebar"
+              spacing="10"
+              prefWidth="220"
+              styleClass="sidebar">
+
+            <Button fx:id="overviewBtn"
+                    text="Overview"
+                    onAction="#openOverView"
+                    styleClass="sub-nav"/>
+
+            <TitledPane text="Billing" expanded="false">
+                <content>
+                    <VBox spacing="5">
+                        <Button fx:id="registerBtn" text="Register Patient"
+                                onAction="#openRegisterPatient"
+                                styleClass="sub-nav"/>
+
+                        <Button fx:id="patientBtn"
+                                text="Patient Search"
+                                onAction="#openPatientSearch"
+                                styleClass="sub-nav"/>
+
+                        <Button text="Pending Bills"
+                                fx:id="pendingBtn"
+                                onAction="#openPendingBills"
+                                styleClass="sub-nav"/>
+
+                        <Button text="Billing History"
+                                fx:id="historyBtn"
+                                onAction="#openBillingHistory"
+                                styleClass="sub-nav"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+            <TitledPane text="Account" expanded="false">
+                <content>
+                    <VBox spacing="5">
+                        <Button text="Profile"
+                                fx:id="profileBtn"
+                                onAction="#openProfile"
+                                styleClass="sub-nav"/>
+
+                        <Button text="Logout"
+                                fx:id="logoutBtn"
+                                onAction="#logout"
+                                styleClass="sub-nav"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+        </VBox>
+    </left>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <center>
+        <StackPane fx:id="contentArea"
+                   styleClass="content-area">
+            <Label text="Welcome to Pramanā Dashboard"/>
+        </StackPane>
+    </center>
+
+</BorderPane>

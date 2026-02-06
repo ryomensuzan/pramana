@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="app.staff.RegisterPatientController"
+      spacing="12"
+      styleClass="content-area">
+
+    <Label text="Register Patient"
+           styleClass="label heading"/>
+
+    <GridPane hgap="10" vgap="10">
+
+        <Label text="Full Name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Gender:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="genderBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Age:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="ageField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Phone:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="phoneField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Address:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextArea fx:id="addressArea"
+                  GridPane.rowIndex="4"
+                  GridPane.columnIndex="1"
+                  prefRowCount="2"/>
+
+    </GridPane>
+
+    <HBox spacing="10">
+        <Button text="Register Patient"
+                onAction="#handleRegister"
+                prefWidth="150"
+                styleClass="btn-primary"/>
+        <Label fx:id="statusLabel"/>
+    </HBox>
+
+</VBox>

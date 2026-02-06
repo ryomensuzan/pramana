@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.staff.BillingHistoryController"
+            prefWidth="1000" prefHeight="600"
+            styleClass="content-area">
+
+    <!-- HEADER -->
+    <top>
+        <Label text="Billing History (FINAL Bills)"
+               styleClass="label heading"
+               BorderPane.alignment="CENTER"/>
+    </top>
+
+    <!-- TABLE -->
+    <center>
+        <TableView fx:id="billTable">
+            <columns>
+                <TableColumn fx:id="billIdCol" text="Bill ID" prefWidth="150"/>
+                <TableColumn fx:id="patientCol" text="Patient" prefWidth="150"/>
+                <TableColumn fx:id="counterCol" text="Counter" prefWidth="150"/>
+                <TableColumn fx:id="amountCol" text="Amount" prefWidth="150"/>
+                <TableColumn fx:id="timeCol" text="Bill Time" prefWidth="200"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <!-- FOOTER -->
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <Label fx:id="totalLabel" text="Total Bills: 0"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

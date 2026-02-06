@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="app.staff.PatientSearchController"
+      spacing="12"
+      styleClass="content-area">
+
+    <Label text="Search Patient"
+           styleClass="label heading"/>
+
+    <HBox spacing="10">
+        <TextField fx:id="searchField"
+                   promptText="Patient Code / Name / Phone"
+                   prefWidth="300"/>
+        <Button text="Search"
+                onAction="#handleSearch"
+                styleClass="btn-primary"/>
+    </HBox>
+
+    <TableView fx:id="patientTable" prefHeight="300">
+        <columns>
+            <TableColumn fx:id="codeCol" text="Patient Code" prefWidth="120"/>
+            <TableColumn fx:id="nameCol" text="Name" prefWidth="150"/>
+            <TableColumn fx:id="genderCol" text="Gender" prefWidth="80"/>
+            <TableColumn fx:id="ageCol" text="Age" prefWidth="60"/>
+            <TableColumn fx:id="phoneCol" text="Phone" prefWidth="120"/>
+        </columns>
+    </TableView>
+
+    <Button text="Select Patient"
+            prefWidth="150"
+            onAction="#handleSelect"
+            styleClass="btn-primary"/>
+
+    <Label fx:id="statusLabel"/>
+
+</VBox>
