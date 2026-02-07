@@ -1,133 +1,179 @@
 package app.staff;
 
-import app.db.DBConnection;
-import app.model.BillContext;
 import app.model.Patient;
+import app.db.DBConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class PatientSearchController implements DashboardAware {
 
+    @FXML
+    private TextField searchField;
+
+    @FXML
+    private TableView<Patient> patientTable;
+
+    @FXML
+    private TableColumn<Patient, String> codeCol;
+
+    @FXML
+    private TableColumn<Patient, String> nameCol;
+
+    @FXML
+    private TableColumn<Patient, String> genderCol;
+
+    @FXML
+    private TableColumn<Patient, Integer> ageCol;
+
+    @FXML
+    private TableColumn<Patient, String> phoneCol;
+
+    @FXML
+    private Label statusLabel;
+
+    private ObservableList<Patient> patientList = FXCollections.observableArrayList();
     private StaffDashboardController dashboardController;
+
     @Override
     public void setDashboardController(StaffDashboardController controller) {
         this.dashboardController = controller;
     }
 
-    @FXML private TextField searchField;
-    @FXML private TableView<Patient> patientTable;
-    @FXML private TableColumn<Patient, String> codeCol;
-    @FXML private TableColumn<Patient, String> nameCol;
-    @FXML private TableColumn<Patient, String> genderCol;
-    @FXML private TableColumn<Patient, Integer> ageCol;
-    @FXML private TableColumn<Patient, String> phoneCol;
-    @FXML private Label statusLabel;
-
-    private final ObservableList<Patient> patientList = FXCollections.observableArrayList();
-
     @FXML
     public void initialize() {
-
-        patientTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
-        codeCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getPatientCode()));
-        nameCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getFullName()));
-        genderCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getGender()));
-        ageCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getAge()));
-        phoneCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getPhone()));
+        // Set up table columns
+        codeCol.setCellValueFactory(new PropertyValueFactory<>("patientCode"));
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+        genderCol.setCellValueFactory(new PropertyValueFactory<>("gender"));
+        ageCol.setCellValueFactory(new PropertyValueFactory<>("age"));
+        phoneCol.setCellValueFactory(new PropertyValueFactory<>("phone"));
 
         patientTable.setItems(patientList);
+
+        // Load all patients initially
+        loadAllPatients();
     }
 
     @FXML
     private void handleSearch() {
+        String searchText = searchField.getText().trim();
 
-        String keyword = searchField.getText();
-
-        if (keyword.isEmpty()) {
-            statusLabel.setText("Enter search keyword");
+        if (searchText.isEmpty()) {
+            loadAllPatients();
             return;
         }
 
         patientList.clear();
 
-        String sql = """
-            SELECT patient_code, full_name, gender, age, phone, address
-            FROM patients
-            WHERE patient_code LIKE ?
-               OR full_name LIKE ?
-               OR phone LIKE ?
-        """;
+        String query = "SELECT * FROM patients WHERE " +
+                "patient_code LIKE ? OR " +
+                "full_name LIKE ? OR " +
+                "phone LIKE ? " +
+                "ORDER BY registered_at DESC";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
 
-            String like = "%" + keyword + "%";
-            ps.setString(1, like);
-            ps.setString(2, like);
-            ps.setString(3, like);
+            String searchPattern = "%" + searchText + "%";
+            pstmt.setString(1, searchPattern);
+            pstmt.setString(2, searchPattern);
+            pstmt.setString(3, searchPattern);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                patientList.add(new Patient(
+                Patient patient = new Patient(
+                        rs.getInt("id"),
                         rs.getString("patient_code"),
                         rs.getString("full_name"),
                         rs.getString("gender"),
                         rs.getInt("age"),
                         rs.getString("phone"),
                         rs.getString("address")
-                ));
+                );
+                patientList.add(patient);
             }
 
-            statusLabel.setText(patientList.size() + " result(s)");
+            statusLabel.setText("Found " + patientList.size() + " patient(s)");
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            statusLabel.setText("Error searching patients: " + e.getMessage());
             e.printStackTrace();
-            statusLabel.setText("Database error");
         }
-        if (!patientList.isEmpty()) {
-            patientTable.getSelectionModel().selectFirst();
-        }
-
     }
 
     @FXML
-    private void handleSelect() {
+    private void handleSelect(ActionEvent event) {
+        Patient selectedPatient = patientTable.getSelectionModel().getSelectedItem();
 
-        Patient selected = patientTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
+        if (selectedPatient == null) {
+            statusLabel.setText("Please select a patient first");
+            return;
+        }
 
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/staff/createBill.fxml")
-            );
+            // Load the CreateBill view
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/staff/createBill.fxml"));
+            javafx.scene.Parent createBillView = loader.load();
 
-            Parent view = loader.load();
+            // Get the controller and pass the selected patient data
             CreateBillController controller = loader.getController();
+            controller.setPatientData(selectedPatient);
 
-            controller.init(new BillContext(selected));
+            // Inject dashboard reference if the controller implements DashboardAware
+            if (controller instanceof DashboardAware) {
+                ((DashboardAware) controller).setDashboardController(dashboardController);
+            }
 
-            dashboardController.loadViewWithContext(view);
+            // Load the view in the dashboard's content area
+            if (dashboardController != null) {
+                dashboardController.loadViewInContentArea(createBillView);
+            }
 
-        } catch (Exception e) {
+        } catch (IOException e) {
+            statusLabel.setText("Error loading create bill view: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    private void loadAllPatients() {
+        patientList.clear();
 
+        String query = "SELECT * FROM patients ORDER BY registered_at DESC LIMIT 100";
 
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Patient patient = new Patient(
+                        rs.getInt("id"),
+                        rs.getString("patient_code"),
+                        rs.getString("full_name"),
+                        rs.getString("gender"),
+                        rs.getInt("age"),
+                        rs.getString("phone"),
+                        rs.getString("address")
+                );
+                patientList.add(patient);
+            }
+
+            statusLabel.setText("Showing " + patientList.size() + " recent patients");
+
+        } catch (SQLException e) {
+            statusLabel.setText("Error loading patients: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

@@ -2,36 +2,121 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="app.staff.ProfileController"
-      spacing="20"
+      spacing="24"
       styleClass="content-area">
 
+    <padding>
+        <Insets top="8" right="0" bottom="0" left="0"/>
+    </padding>
+
     <!-- HEADER -->
-    <Label text="My Profile"
-           styleClass="label heading"/>
+    <VBox spacing="4">
+        <Label text="My Profile"
+               styleClass="label, heading"/>
+        <Label text="View your account information"
+               styleClass="label, muted"/>
+    </VBox>
 
-    <!-- PROFILE DETAILS -->
-    <GridPane hgap="16" vgap="14">
+    <!-- PROFILE CARD -->
+    <VBox spacing="0" styleClass="card" maxWidth="600">
 
-        <Label text="Username:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <Label fx:id="usernameLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <!-- Profile Header with Avatar -->
+        <HBox spacing="20" alignment="CENTER_LEFT" styleClass="profile-header">
+            <padding>
+                <Insets top="24" right="24" bottom="24" left="24"/>
+            </padding>
 
-        <Label text="Role:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <Label fx:id="roleLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <!-- Avatar Circle -->
+            <VBox alignment="CENTER" styleClass="profile-avatar">
+                <Label fx:id="avatarLabel" text="👤" styleClass="avatar-icon"/>
+            </VBox>
 
-        <Label text="Counter No:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <Label fx:id="counterLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            <!-- User Info -->
+            <VBox spacing="4">
+                <Label fx:id="usernameLabel" text="staff01" styleClass="profile-name"/>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label fx:id="roleLabel" text="STAFF" styleClass="profile-role"/>
+                    <Label fx:id="statusBadge" text="● Active" styleClass="status-badge, status-active"/>
+                </HBox>
+            </VBox>
+        </HBox>
 
-        <Label text="Status:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <Label fx:id="statusLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <Separator styleClass="card-separator"/>
 
-        <Label text="Account Created:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <Label fx:id="createdAtLabel" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <!-- Account Details Grid -->
+        <GridPane hgap="20" vgap="18" styleClass="profile-details">
+            <padding>
+                <Insets top="24" right="24" bottom="24" left="24"/>
+            </padding>
 
-    </GridPane>
+            <columnConstraints>
+                <ColumnConstraints percentWidth="35"/>
+                <ColumnConstraints percentWidth="65"/>
+            </columnConstraints>
 
-    <Separator/>
+            <!-- Username -->
+            <VBox spacing="4" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                <Label text="Username" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="usernameValue" text="staff01"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <!-- Role -->
+            <VBox spacing="4" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                <Label text="Role" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="roleValue" text="STAFF"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <!-- Counter Number -->
+            <VBox spacing="4" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                <Label text="Counter Number" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="counterLabel" text="C-01"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <!-- Account Status -->
+            <VBox spacing="4" GridPane.rowIndex="3" GridPane.columnIndex="0">
+                <Label text="Account Status" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="statusLabel" text="Active"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <!-- Created Date -->
+            <VBox spacing="4" GridPane.rowIndex="4" GridPane.columnIndex="0">
+                <Label text="Account Created" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="createdAtLabel" text="2024-08-12 10:15:00"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        </GridPane>
+
+    </VBox>
+
+    <!-- Action Buttons -->
+    <HBox spacing="12">
+        <VBox.margin>
+            <Insets top="8"/>
+        </VBox.margin>
+
+        <Button text="Edit Profile"
+                styleClass="btn-secondary"
+                onAction="#handleEditProfile"
+                disable="true"/>
+
+        <Button text="Change Password"
+                styleClass="btn-primary"
+                onAction="#handleChangePassword"
+                disable="true"/>
+    </HBox>
 
 </VBox>

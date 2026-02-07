@@ -13,6 +13,7 @@ public class Main extends Application {
 
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/login.fxml")
+                //Below fxml are for testing purpose only
 //                getClass().getResource("/staff/staffDashboard.fxml")
 //                getClass().getResource("/admin/adminDashboard.fxml")
         );

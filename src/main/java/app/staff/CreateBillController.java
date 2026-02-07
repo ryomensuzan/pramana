@@ -1,485 +1,622 @@
 package app.staff;
 
+import app.model.Patient;
+import app.model.Service;
+import app.model.BillItem;
 import app.db.DBConnection;
-import app.model.*;
+import app.util.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CreateBillController implements DashboardAware {
+
+    @FXML
+    private Label patientLabel;
+
+    @FXML
+    private Label counterLabel;
+
+    @FXML
+    private TableView<BillItem> billTable;
+
+    @FXML
+    private TableColumn<BillItem, String> serviceCol;
+
+    @FXML
+    private TableColumn<BillItem, Double> priceCol;
+
+    @FXML
+    private TableColumn<BillItem, Integer> qtyCol;
+
+    @FXML
+    private TableColumn<BillItem, Double> totalCol;
+
+    @FXML
+    private ComboBox<String> categoryBox;
+
+    @FXML
+    private ComboBox<String> serviceBox;
+
+    @FXML
+    private TextField qtyField;
+
+    @FXML
+    private Label grandTotalLabel;
+
+    private Patient currentPatient;
+    private String counterNo;
     private StaffDashboardController dashboardController;
+    private ObservableList<BillItem> billItems = FXCollections.observableArrayList();
+    private Map<String, ObservableList<Service>> categoryServicesMap = new HashMap<>();
+    private double grandTotal = 0.0;
+
+    // Track if we're editing an existing bill
+    private Integer editingBillId = null;
+
     @Override
     public void setDashboardController(StaffDashboardController controller) {
         this.dashboardController = controller;
     }
-    // ===== Patient Info =====
-    @FXML private Label patientLabel;
-    @FXML private Label counterLabel;
 
-    // ===== Bill Table =====
-    @FXML private TableView<BillItem> billTable;
-    @FXML private TableColumn<BillItem, String> serviceCol;
-    @FXML private TableColumn<BillItem, Double> priceCol;
-    @FXML private TableColumn<BillItem, Integer> qtyCol;
-    @FXML private TableColumn<BillItem, Double> totalCol;
-
-    // ===== Service Selection =====
-    @FXML private ComboBox<ServiceCategoryModel> categoryBox;
-    @FXML private ComboBox<ServiceModel> serviceBox;
-    @FXML private TextField qtyField;
-    @FXML private Label grandTotalLabel;
-
-    private final ObservableList<BillItem> billItems = FXCollections.observableArrayList();
-
-    private Patient patient;
-    private String counterNo;
-    private double grandTotal = 0.0;
-    private Integer billId = null; // null = new draft
-
-
-    // ================= INIT =================
     @FXML
     public void initialize() {
+        // Set up table columns
+        serviceCol.setCellValueFactory(new PropertyValueFactory<>("serviceName"));
+        priceCol.setCellValueFactory(new PropertyValueFactory<>("price"));
+        qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        totalCol.setCellValueFactory(new PropertyValueFactory<>("total"));
 
-        // Category display
-        categoryBox.setCellFactory(cb -> new ListCell<>() {
+        // Format price and total columns
+        priceCol.setCellFactory(col -> new TableCell<BillItem, Double>() {
             @Override
-            protected void updateItem(ServiceCategoryModel item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getCategoryName());
+            protected void updateItem(Double price, boolean empty) {
+                super.updateItem(price, empty);
+                if (empty || price == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f", price));
+                }
             }
         });
-        categoryBox.setButtonCell(categoryBox.getCellFactory().call(null));
 
-        // Service display
-        serviceBox.setCellFactory(cb -> new ListCell<>() {
+        totalCol.setCellFactory(col -> new TableCell<BillItem, Double>() {
             @Override
-            protected void updateItem(ServiceModel item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null
-                        ? null
-                        : item.getServiceName() + " (" + item.getPrice() + ")");
+            protected void updateItem(Double total, boolean empty) {
+                super.updateItem(total, empty);
+                if (empty || total == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f", total));
+                }
             }
         });
-        serviceBox.setButtonCell(serviceBox.getCellFactory().call(null));
-
-        // Table bindings
-        serviceCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getServiceName()));
-        priceCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getPrice()));
-        qtyCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getQuantity()));
-        totalCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getTotal()));
 
         billTable.setItems(billItems);
+
+        // Set default quantity
+        qtyField.setText("1");
+
+        // Get counter number from session manager
+        SessionManager session = SessionManager.getInstance();
+        if (session.isLoggedIn()) {
+            this.counterNo = session.getCounterNo();
+            System.out.println("DEBUG: Counter from session: " + this.counterNo);
+            if (this.counterNo != null && !this.counterNo.isEmpty()) {
+                counterLabel.setText("Counter: " + this.counterNo);
+            } else {
+                counterLabel.setText("Counter: N/A");
+            }
+        } else {
+            System.out.println("WARNING: No active session!");
+            counterLabel.setText("Counter: N/A");
+        }
 
         // Load categories
         loadCategories();
 
-        // Category → service binding
-        categoryBox.setOnAction(e -> loadServicesByCategory());
+        // Add listener to category selection
+        categoryBox.setOnAction(event -> {
+            String selectedCategory = categoryBox.getValue();
+            if (selectedCategory != null) {
+                loadServicesForCategory(selectedCategory);
+            }
+        });
+
+        // Add context menu for removing items
+        addContextMenu();
     }
 
-    // ================= PATIENT DATA =================
-    public void initData(Patient patient, String counterNo) {
-        this.patient = patient;
+    /**
+     * Set the patient data when navigating from patient search
+     */
+    public void setPatientData(Patient patient) {
+        this.currentPatient = patient;
+        this.editingBillId = null; // New bill
+
+        // Update patient label
+        if (patient != null) {
+            patientLabel.setText(String.format("Patient: %s (%s) - Age: %d, Gender: %s",
+                    patient.getFullName(),
+                    patient.getPatientCode(),
+                    patient.getAge(),
+                    patient.getGender()));
+        }
+    }
+
+    /**
+     * Set counter number (call this from dashboard after login)
+     */
+    public void setCounterNo(String counterNo) {
         this.counterNo = counterNo;
-
-        patientLabel.setText("Patient: " + patient.getFullName()
-                + " (" + patient.getPatientCode() + ")");
-        counterLabel.setText("Counter: " + counterNo);
-    }
-
-    // ================= LOAD CATEGORIES =================
-    private void loadCategories() {
-
-        categoryBox.getItems().clear();
-
-        String sql = """
-            SELECT id, category_name, description, status
-            FROM service_category
-            WHERE status = 'ACTIVE'
-        """;
-
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                categoryBox.getItems().add(
-                        new ServiceCategoryModel(
-                                rs.getInt("id"),
-                                rs.getString("category_name"),
-                                rs.getString("description"),
-                                rs.getString("status")
-                        )
-                );
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (counterNo != null) {
+            counterLabel.setText("Counter: " + counterNo);
         }
     }
 
-    // ================= LOAD SERVICES BY CATEGORY =================
-    private void loadServicesByCategory() {
+    /**
+     * Load existing bill for editing
+     * @param billId The bill ID to load
+     */
+    public void loadBillForEdit(int billId) {
+        this.editingBillId = billId;
 
-        serviceBox.getItems().clear();
+        String billQuery = "SELECT b.patient_code, p.full_name, p.gender, p.age, b.counter_no " +
+                "FROM bills b " +
+                "JOIN patients p ON b.patient_code = p.patient_code " +
+                "WHERE b.id = ?";
 
-        ServiceCategoryModel category = categoryBox.getValue();
-        if (category == null) return;
+        String itemsQuery = "SELECT service_name, price, quantity FROM bill_items WHERE bill_id = ?";
 
-        String sql = """
-            SELECT s.id, sc.category_name, s.service_name, s.price, s.status
-            FROM services s
-            JOIN service_category sc ON s.category_id = sc.id
-            WHERE s.category_id = ?
-              AND s.status = 'ACTIVE'
-        """;
+        try (Connection conn = DBConnection.getConnection()) {
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+            // Load bill header
+            try (PreparedStatement pstmt = conn.prepareStatement(billQuery)) {
+                pstmt.setInt(1, billId);
+                ResultSet rs = pstmt.executeQuery();
 
-            ps.setInt(1, category.getId());
-            ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    // Create patient object
+                    Patient patient = new Patient(
+                            0, // id not needed
+                            rs.getString("patient_code"),
+                            rs.getString("full_name"),
+                            rs.getString("gender"),
+                            rs.getInt("age"),
+                            null, // phone not needed
+                            null  // address not needed
+                    );
+                    this.currentPatient = patient;
 
-            while (rs.next()) {
-                serviceBox.getItems().add(
-                        new ServiceModel(
-                                rs.getInt("id"),
-                                rs.getString("category_name"),
-                                rs.getString("service_name"),
-                                rs.getDouble("price"),
-                                rs.getString("status")
-                        )
-                );
-            }
+                    patientLabel.setText(String.format("Patient: %s (%s) - Age: %d, Gender: %s (EDITING)",
+                            patient.getFullName(),
+                            patient.getPatientCode(),
+                            patient.getAge(),
+                            patient.getGender()));
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // ================= ADD SERVICE TO BILL =================
-    @FXML
-    private void handleAddService() {
-
-        ServiceModel service = serviceBox.getValue();
-        if (service == null || qtyField.getText().isEmpty()) return;
-
-        int qty;
-        try {
-            qty = Integer.parseInt(qtyField.getText());
-        } catch (NumberFormatException e) {
-            return;
-        }
-
-        BillItem item = new BillItem(
-                service.getServiceName(),
-                service.getPrice(),
-                qty
-        );
-
-        billItems.add(item);
-        grandTotal += item.getTotal();
-        grandTotalLabel.setText("Grand Total: " + grandTotal);
-
-        qtyField.clear();
-    }
-    @FXML
-    private void handleGenerateBill() {
-
-        if (billItems.isEmpty()) {
-            return;
-        }
-
-        String insertBillSql = """
-        INSERT INTO bills (patient_id, counter_no, total_amount)
-        VALUES (?, ?, ?)
-    """;
-
-        String insertItemSql = """
-        INSERT INTO bill_items (bill_id, service_name, price, quantity, total)
-        VALUES (?, ?, ?, ?, ?)
-    """;
-
-        try (Connection con = DBConnection.getConnection()) {
-
-            // ================= INSERT BILL =================
-            con.setAutoCommit(false);
-
-            int billId;
-
-            try (PreparedStatement billPs =
-                         con.prepareStatement(insertBillSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-
-                billPs.setString(1, patient.getPatientCode());
-                billPs.setString(2, counterNo);
-                billPs.setDouble(3, grandTotal);
-
-                billPs.executeUpdate();
-
-                ResultSet rs = billPs.getGeneratedKeys();
-                if (!rs.next()) {
-                    con.rollback();
-                    return;
+                    setCounterNo(rs.getString("counter_no"));
                 }
-
-                billId = rs.getInt(1);
             }
 
-            // ================= INSERT BILL ITEMS =================
-            try (PreparedStatement itemPs = con.prepareStatement(insertItemSql)) {
+            // Load bill items
+            try (PreparedStatement pstmt = conn.prepareStatement(itemsQuery)) {
+                pstmt.setInt(1, billId);
+                ResultSet rs = pstmt.executeQuery();
 
-                for (BillItem item : billItems) {
-                    itemPs.setInt(1, billId);
-                    itemPs.setString(2, item.getServiceName());
-                    itemPs.setDouble(3, item.getPrice());
-                    itemPs.setInt(4, item.getQuantity());
-                    itemPs.setDouble(5, item.getTotal());
-                    itemPs.addBatch();
-                }
-
-                itemPs.executeBatch();
-            }
-
-            con.commit();
-
-            // ================= RESET UI =================
-            billItems.clear();
-            grandTotal = 0;
-            grandTotalLabel.setText("Grand Total: 0");
-
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Success");
-            alert.setHeaderText(null);
-            alert.setContentText("Bill generated successfully!");
-            alert.showAndWait();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    public void init(BillContext context) {
-
-        this.patient = context.getPatient();
-
-        patientLabel.setText(
-                "Patient: " + patient.getFullName()
-                        + " (" + patient.getPatientCode() + ")"
-        );
-
-        if (context.getBillId() != null) {
-            loadExistingBill(context.getBillId());
-        }
-
-        loadCategories();
-    }
-    private void loadExistingBill(int billId) {
-
-        billItems.clear();
-        grandTotal = 0;
-        this.billId = billId;
-
-        String billSql = """
-        SELECT patient_code, counter_no, total_amount
-        FROM bills
-        WHERE id = ? AND status = 'DRAFT'
-    """;
-
-        String itemsSql = """
-        SELECT service_name, price, quantity
-        FROM bill_items
-        WHERE bill_id = ?
-    """;
-
-        try (Connection con = DBConnection.getConnection()) {
-
-            // 1️⃣ Load bill header
-            try (PreparedStatement ps = con.prepareStatement(billSql)) {
-                ps.setInt(1, billId);
-                ResultSet rs = ps.executeQuery();
-
-                if (!rs.next()) {
-                    System.out.println("Draft bill not found: " + billId);
-                    return;
-                }
-
-                counterNo = rs.getString("counter_no");
-                grandTotal = rs.getDouble("total_amount");
-            }
-
-            // 2️⃣ Load bill items
-            try (PreparedStatement ps = con.prepareStatement(itemsSql)) {
-                ps.setInt(1, billId);
-                ResultSet rs = ps.executeQuery();
-
+                billItems.clear();
                 while (rs.next()) {
-
                     BillItem item = new BillItem(
                             rs.getString("service_name"),
                             rs.getDouble("price"),
                             rs.getInt("quantity")
                     );
-
                     billItems.add(item);
                 }
+                updateGrandTotal();
             }
 
-            // 3️⃣ Update UI
-            billTable.setItems(billItems);
-            recalculateGrandTotal();
-
-            System.out.println("Loaded draft bill ID: " + billId);
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            showError("Error loading bill for edit: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private void recalculateGrandTotal() {
+    private void loadCategories() {
+        String query = "SELECT category_name FROM service_category WHERE status = 'ACTIVE' ORDER BY category_name";
 
-        grandTotal = billItems.stream()
-                .mapToDouble(BillItem::getTotal)
-                .sum();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
 
-        grandTotalLabel.setText("Grand Total: " + grandTotal);
+            ObservableList<String> categories = FXCollections.observableArrayList();
+
+            while (rs.next()) {
+                String categoryName = rs.getString("category_name");
+                categories.add(categoryName);
+                categoryServicesMap.put(categoryName, FXCollections.observableArrayList());
+            }
+
+            categoryBox.setItems(categories);
+
+        } catch (SQLException e) {
+            showError("Error loading categories: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
-
-
-    @FXML
-    private void handleSaveDraft() {
-
-        if (patient == null || billItems.isEmpty()) {
+    private void loadServicesForCategory(String categoryName) {
+        // Check if already loaded
+        if (!categoryServicesMap.get(categoryName).isEmpty()) {
+            updateServiceBox(categoryName);
             return;
         }
 
-        try (Connection con = DBConnection.getConnection()) {
+        String query = "SELECT s.id, s.service_name, s.price " +
+                "FROM services s " +
+                "JOIN service_category sc ON s.category_id = sc.id " +
+                "WHERE sc.category_name = ? AND s.status = 'ACTIVE' " +
+                "ORDER BY s.service_name";
 
-            con.setAutoCommit(false);
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
 
-            if (billId == null) {
-                billId = insertBill(con);
-            } else {
-                updateBill(con);
-                deleteBillItems(con);
+            pstmt.setString(1, categoryName);
+            ResultSet rs = pstmt.executeQuery();
+
+            ObservableList<Service> services = categoryServicesMap.get(categoryName);
+            services.clear();
+
+            while (rs.next()) {
+                Service service = new Service(
+                        rs.getInt("id"),
+                        rs.getString("service_name"),
+                        rs.getDouble("price")
+                );
+                services.add(service);
             }
 
-            insertBillItems(con);
+            updateServiceBox(categoryName);
 
-            con.commit();
-
-            System.out.println("Draft saved. Bill ID = " + billId);
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            showError("Error loading services: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private int insertBill(Connection con) throws Exception {
+    private void updateServiceBox(String categoryName) {
+        ObservableList<Service> services = categoryServicesMap.get(categoryName);
+        ObservableList<String> serviceNames = FXCollections.observableArrayList();
 
-        String sql = """
-        INSERT INTO bills (patient_code, counter_no, total_amount, status)
-        VALUES (?, ?, ?, 'DRAFT')
-    """;
-
-        try (PreparedStatement ps =
-                     con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-
-            ps.setString(1, patient.getPatientCode());
-            ps.setString(2, counterNo);
-            ps.setDouble(3, grandTotal);
-            ps.executeUpdate();
-
-            ResultSet rs = ps.getGeneratedKeys();
-            rs.next();
-            return rs.getInt(1);
+        for (Service service : services) {
+            serviceNames.add(service.getServiceName());
         }
+
+        serviceBox.setItems(serviceNames);
+        serviceBox.setValue(null);
     }
 
-    private void updateBill(Connection con) throws Exception {
+    @FXML
+    private void handleAddService() {
+        String category = categoryBox.getValue();
+        String serviceName = serviceBox.getValue();
+        String qtyText = qtyField.getText().trim();
 
-        String sql = """
-        UPDATE bills
-        SET total_amount = ?
-        WHERE id = ? AND status = 'DRAFT'
-    """;
-
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setDouble(1, grandTotal);
-            ps.setInt(2, billId);
-            ps.executeUpdate();
+        // Validation
+        if (category == null || serviceName == null || qtyText.isEmpty()) {
+            showError("Please select category, service, and enter quantity");
+            return;
         }
-    }
 
-    private void deleteBillItems(Connection con) throws Exception {
-
-        String sql = "DELETE FROM bill_items WHERE bill_id = ?";
-
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, billId);
-            ps.executeUpdate();
-        }
-    }
-
-    private void insertBillItems(Connection con) throws Exception {
-
-        String sql = """
-        INSERT INTO bill_items (bill_id, service_name, price, quantity)
-        VALUES (?, ?, ?, ?)
-    """;
-
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-
-            for (BillItem item : billItems) {
-                ps.setInt(1, billId);
-                ps.setString(2, item.getServiceName());
-                ps.setDouble(3, item.getPrice());
-                ps.setInt(4, item.getQuantity());
-                ps.addBatch();
+        int quantity;
+        try {
+            quantity = Integer.parseInt(qtyText);
+            if (quantity <= 0) {
+                showError("Quantity must be greater than 0");
+                return;
             }
+        } catch (NumberFormatException e) {
+            showError("Invalid quantity");
+            return;
+        }
 
-            ps.executeBatch();
+        // Find the service to get price
+        Service selectedService = null;
+        for (Service service : categoryServicesMap.get(category)) {
+            if (service.getServiceName().equals(serviceName)) {
+                selectedService = service;
+                break;
+            }
+        }
+
+        if (selectedService == null) {
+            showError("Service not found");
+            return;
+        }
+
+        // Check if service already exists in bill
+        for (BillItem item : billItems) {
+            if (item.getServiceName().equals(serviceName)) {
+                // Update quantity
+                item.setQuantity(item.getQuantity() + quantity);
+                billTable.refresh();
+                updateGrandTotal();
+                resetServiceFields();
+                return;
+            }
+        }
+
+        // Add new bill item
+        BillItem billItem = new BillItem(
+                serviceName,
+                selectedService.getPrice(),
+                quantity
+        );
+
+        billItems.add(billItem);
+        updateGrandTotal();
+        resetServiceFields();
+    }
+
+    private void resetServiceFields() {
+        categoryBox.setValue(null);
+        serviceBox.setValue(null);
+        serviceBox.setItems(FXCollections.observableArrayList());
+        qtyField.setText("1");
+    }
+
+    private void updateGrandTotal() {
+        grandTotal = 0.0;
+        for (BillItem item : billItems) {
+            grandTotal += item.getTotal();
+        }
+        grandTotalLabel.setText(String.format("Grand Total: %.2f", grandTotal));
+    }
+
+    private void addContextMenu() {
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem removeItem = new MenuItem("Remove");
+
+        removeItem.setOnAction(event -> {
+            BillItem selected = billTable.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                billItems.remove(selected);
+                updateGrandTotal();
+            }
+        });
+
+        contextMenu.getItems().add(removeItem);
+        billTable.setContextMenu(contextMenu);
+
+        // Also add a delete key handler
+        billTable.setOnKeyPressed(event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.DELETE) {
+                BillItem selected = billTable.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    billItems.remove(selected);
+                    updateGrandTotal();
+                }
+            }
+        });
+    }
+
+    @FXML
+    private void handleSaveDraft() {
+        if (currentPatient == null) {
+            showError("No patient selected");
+            return;
+        }
+
+        if (billItems.isEmpty()) {
+            showError("Bill is empty. Add at least one service.");
+            return;
+        }
+
+        if (editingBillId != null) {
+            // Update existing draft
+            updateBill("DRAFT");
+        } else {
+            // Create new draft
+            saveBill("DRAFT");
         }
     }
 
     @FXML
     private void handleGeneratePrebill() {
+        if (currentPatient == null) {
+            showError("No patient selected");
+            return;
+        }
 
-        if (patient == null) return;
+        if (billItems.isEmpty()) {
+            showError("Bill is empty. Add at least one service.");
+            return;
+        }
 
-        handleSaveDraft(); // must assign billId
-
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/staff/preBill.fxml")
-            );
-
-            Parent view = loader.load();
-            PreBillController controller = loader.getController();
-
-            controller.setDashboardController(dashboardController);
-            controller.init(patient, billId);
-
-            dashboardController.loadViewWithContext(view);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (editingBillId != null) {
+            // Update existing bill and change status to FINAL
+            updateBill("FINAL");
+        } else {
+            // Create new bill as FINAL
+            saveBill("FINAL");
         }
     }
 
+    private void saveBill(String status) {
+        Connection conn = null;
+        PreparedStatement billStmt = null;
+        PreparedStatement itemStmt = null;
 
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
 
+            // Insert bill
+            String billQuery = "INSERT INTO bills (patient_code, counter_no, total_amount, status) " +
+                    "VALUES (?, ?, ?, ?)";
+            billStmt = conn.prepareStatement(billQuery, Statement.RETURN_GENERATED_KEYS);
+            billStmt.setString(1, currentPatient.getPatientCode());
+            billStmt.setString(2, counterNo);
+            billStmt.setDouble(3, grandTotal);
+            billStmt.setString(4, status);
+            billStmt.executeUpdate();
 
+            // Get generated bill ID
+            ResultSet rs = billStmt.getGeneratedKeys();
+            int billId = 0;
+            if (rs.next()) {
+                billId = rs.getInt(1);
+            }
+
+            // Insert bill items
+            String itemQuery = "INSERT INTO bill_items (bill_id, service_name, price, quantity) " +
+                    "VALUES (?, ?, ?, ?)";
+            itemStmt = conn.prepareStatement(itemQuery);
+
+            for (BillItem item : billItems) {
+                itemStmt.setInt(1, billId);
+                itemStmt.setString(2, item.getServiceName());
+                itemStmt.setDouble(3, item.getPrice());
+                itemStmt.setInt(4, item.getQuantity());
+                itemStmt.addBatch();
+            }
+
+            itemStmt.executeBatch();
+            conn.commit();
+
+            String message = status.equals("DRAFT") ?
+                    "Draft saved successfully! Bill ID: " + billId :
+                    "Prebill generated successfully! Bill ID: " + billId;
+
+            showSuccess(message);
+
+            // Clear the form
+            clearBill();
+
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            showError("Error saving bill: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (itemStmt != null) itemStmt.close();
+                if (billStmt != null) billStmt.close();
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void updateBill(String status) {
+        Connection conn = null;
+        PreparedStatement billStmt = null;
+        PreparedStatement deleteItemsStmt = null;
+        PreparedStatement itemStmt = null;
+
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            // Update bill
+            String billQuery = "UPDATE bills SET total_amount = ?, status = ?, bill_time = CURRENT_TIMESTAMP " +
+                    "WHERE id = ?";
+            billStmt = conn.prepareStatement(billQuery);
+            billStmt.setDouble(1, grandTotal);
+            billStmt.setString(2, status);
+            billStmt.setInt(3, editingBillId);
+            billStmt.executeUpdate();
+
+            // Delete old bill items
+            String deleteQuery = "DELETE FROM bill_items WHERE bill_id = ?";
+            deleteItemsStmt = conn.prepareStatement(deleteQuery);
+            deleteItemsStmt.setInt(1, editingBillId);
+            deleteItemsStmt.executeUpdate();
+
+            // Insert updated bill items
+            String itemQuery = "INSERT INTO bill_items (bill_id, service_name, price, quantity) " +
+                    "VALUES (?, ?, ?, ?)";
+            itemStmt = conn.prepareStatement(itemQuery);
+
+            for (BillItem item : billItems) {
+                itemStmt.setInt(1, editingBillId);
+                itemStmt.setString(2, item.getServiceName());
+                itemStmt.setDouble(3, item.getPrice());
+                itemStmt.setInt(4, item.getQuantity());
+                itemStmt.addBatch();
+            }
+
+            itemStmt.executeBatch();
+            conn.commit();
+
+            String message = status.equals("DRAFT") ?
+                    "Draft updated successfully! Bill ID: " + editingBillId :
+                    "Bill finalized successfully! Bill ID: " + editingBillId;
+
+            showSuccess(message);
+
+            // Clear the form
+            clearBill();
+
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            showError("Error updating bill: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (itemStmt != null) itemStmt.close();
+                if (deleteItemsStmt != null) deleteItemsStmt.close();
+                if (billStmt != null) billStmt.close();
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void clearBill() {
+        billItems.clear();
+        updateGrandTotal();
+        resetServiceFields();
+        editingBillId = null;
+    }
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showSuccess(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 }

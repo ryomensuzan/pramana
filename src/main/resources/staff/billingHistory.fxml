@@ -5,33 +5,87 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="app.staff.BillingHistoryController"
-            prefWidth="1000" prefHeight="600"
             styleClass="content-area">
 
-    <!-- HEADER -->
     <top>
-        <Label text="Billing History (FINAL Bills)"
-               styleClass="label heading"
-               BorderPane.alignment="CENTER"/>
+        <VBox spacing="15">
+            <Label text="Billing History" styleClass="label heading"/>
+
+            <!-- Search and Filters -->
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="searchField"
+                           promptText="Search by Patient Code / Name / Bill ID"
+                           prefWidth="300"/>
+                <Button text="Search"
+                        onAction="#handleSearch"
+                        styleClass="btn-primary"/>
+                <Button text="Clear"
+                        onAction="#handleClear"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <!-- Status Filter -->
+                <Label text="Status:"/>
+                <ComboBox fx:id="statusFilter"
+                          promptText="All"
+                          prefWidth="120"
+                          onAction="#handleFilter"/>
+
+                <!-- Date Range -->
+                <Label text="From:"/>
+                <DatePicker fx:id="fromDatePicker"
+                            prefWidth="140"
+                            onAction="#handleFilter"/>
+                <Label text="To:"/>
+                <DatePicker fx:id="toDatePicker"
+                            prefWidth="140"
+                            onAction="#handleFilter"/>
+            </HBox>
+        </VBox>
     </top>
 
-    <!-- TABLE -->
     <center>
-        <TableView fx:id="billTable">
-            <columns>
-                <TableColumn fx:id="billIdCol" text="Bill ID" prefWidth="150"/>
-                <TableColumn fx:id="patientCol" text="Patient" prefWidth="150"/>
-                <TableColumn fx:id="counterCol" text="Counter" prefWidth="150"/>
-                <TableColumn fx:id="amountCol" text="Amount" prefWidth="150"/>
-                <TableColumn fx:id="timeCol" text="Bill Time" prefWidth="200"/>
-            </columns>
-        </TableView>
+        <VBox spacing="10" style="-fx-padding: 10 0 0 0;">
+            <!-- Bills Table -->
+            <TableView fx:id="billsTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="billIdCol" text="Bill ID" prefWidth="100"/>
+                    <TableColumn fx:id="patientCodeCol" text="Patient Code" prefWidth="130"/>
+                    <TableColumn fx:id="patientNameCol" text="Patient Name" prefWidth="180"/>
+                    <TableColumn fx:id="totalCol" text="Total Amount" prefWidth="120"/>
+                    <TableColumn fx:id="dateCol" text="Bill Date" prefWidth="150"/>
+                    <TableColumn fx:id="counterCol" text="Counter" prefWidth="100"/>
+                    <TableColumn fx:id="statusCol" text="Status" prefWidth="100"/>
+                </columns>
+            </TableView>
+
+            <!-- Summary -->
+            <HBox spacing="20" alignment="CENTER_RIGHT" style="-fx-padding: 10;">
+                <Label text="Total Bills:"/>
+                <Label fx:id="totalBillsLabel" style="-fx-font-weight: bold;"/>
+
+                <Label text="Total Revenue:"/>
+                <Label fx:id="totalRevenueLabel" style="-fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
     </center>
 
-    <!-- FOOTER -->
     <bottom>
-        <HBox alignment="CENTER_RIGHT" spacing="10">
-            <Label fx:id="totalLabel" text="Total Bills: 0"/>
+        <HBox spacing="15" alignment="CENTER" style="-fx-padding: 15;">
+            <Button text="View Details"
+                    onAction="#handleViewDetails"
+                    styleClass="btn-primary"
+                    prefWidth="120"/>
+            <Button text="Print Bill"
+                    onAction="#handlePrintBill"
+                    styleClass="btn-primary"
+                    prefWidth="120"/>
+            <Button text="Export to Excel"
+                    onAction="#handleExportExcel"
+                    prefWidth="130"/>
+            <Button text="Refresh"
+                    onAction="#handleRefresh"
+                    prefWidth="100"/>
         </HBox>
     </bottom>
 

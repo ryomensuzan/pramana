@@ -2,19 +2,46 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="app.LogoutController"
       alignment="CENTER"
-      spacing="20"
-      style="-fx-padding:30;">
+      spacing="24"
+      stylesheets="@/css/logout.css"
+      styleClass="logout-container"
+      prefWidth="400"
+      prefHeight="250">
 
-    <Label text="Are you sure you want to logout?"
-           style="-fx-font-size:16; -fx-font-weight:bold;"/>
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
 
-    <HBox spacing="15" alignment="CENTER">
-        <Button text="Yes, Logout" onAction="#confirmLogout"/>
-        <Button text="Cancel" onAction="#cancel"/>
+    <!-- Icon -->
+    <Label text="🚪" styleClass="logout-icon"/>
+
+    <!-- Message -->
+    <VBox spacing="8" alignment="CENTER">
+        <Label text="Confirm Logout"
+               styleClass="logout-title"/>
+        <Label text="Are you sure you want to logout?"
+               styleClass="logout-message"/>
+    </VBox>
+
+    <!-- Buttons -->
+    <HBox spacing="12" alignment="CENTER">
+        <VBox.margin>
+            <Insets top="8"/>
+        </VBox.margin>
+
+        <Button text="Yes, Logout"
+                onAction="#confirmLogout"
+                styleClass="btn-danger"
+                prefWidth="120"/>
+        <Button text="Cancel"
+                onAction="#cancel"
+                styleClass="btn-secondary"
+                prefWidth="120"/>
     </HBox>
 
 </VBox>

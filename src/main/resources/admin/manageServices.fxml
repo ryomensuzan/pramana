@@ -53,6 +53,7 @@
                     <TableColumn fx:id="nameColumn" text="Service Name" prefWidth="200"/>
                     <TableColumn fx:id="priceColumn" text="Price" prefWidth="100"/>
                     <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+                    <TableColumn fx:id="actionsCol" text="Actions" prefWidth="200"/>
                 </columns>
             </TableView>
 

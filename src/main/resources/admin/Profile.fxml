@@ -1,14 +1,116 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller=""
-            prefHeight="400.0" prefWidth="600.0">
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="app.admin.ProfileController"
+      spacing="24"
+      styleClass="content-area">
 
-</AnchorPane>
+    <padding>
+        <Insets top="8" right="0" bottom="0" left="0"/>
+    </padding>
+
+    <!-- HEADER -->
+    <VBox spacing="4">
+        <Label text="My Profile"
+               styleClass="label, heading"/>
+        <Label text="View your account information"
+               styleClass="label, muted"/>
+    </VBox>
+
+    <!-- PROFILE CARD -->
+    <VBox spacing="0" styleClass="card" maxWidth="600">
+
+        <!-- Profile Header with Avatar -->
+        <HBox spacing="20" alignment="CENTER_LEFT" styleClass="profile-header">
+            <padding>
+                <Insets top="24" right="24" bottom="24" left="24"/>
+            </padding>
+
+            <!-- Avatar Circle -->
+            <VBox alignment="CENTER" styleClass="profile-avatar">
+                <Label fx:id="avatarLabel" text="A" styleClass="avatar-icon"/>
+            </VBox>
+
+            <!-- User Info -->
+            <VBox spacing="4">
+                <Label fx:id="usernameLabel" text="admin" styleClass="profile-name"/>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label fx:id="roleLabel" text="ADMIN" styleClass="profile-role"/>
+                    <Label fx:id="statusBadge" text="● Active" styleClass="status-badge, status-active"/>
+                </HBox>
+            </VBox>
+        </HBox>
+
+        <Separator styleClass="card-separator"/>
+
+        <!-- Account Details Grid -->
+        <GridPane hgap="20" vgap="18" styleClass="profile-details">
+            <padding>
+                <Insets top="24" right="24" bottom="24" left="24"/>
+            </padding>
+
+            <columnConstraints>
+                <ColumnConstraints percentWidth="35"/>
+                <ColumnConstraints percentWidth="65"/>
+            </columnConstraints>
+
+            <!-- Username -->
+            <VBox spacing="4" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                <Label text="Username" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="usernameValue" text="admin"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <!-- Role -->
+            <VBox spacing="4" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                <Label text="Role" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="roleValue" text="ADMIN"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <!-- Counter Number -->
+            <VBox spacing="4" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                <Label text="Counter Number" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="counterLabel" text="N/A"
+                   styleClass="detail-value, detail-muted"
+                   GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <!-- Account Status -->
+            <VBox spacing="4" GridPane.rowIndex="3" GridPane.columnIndex="0">
+                <Label text="Account Status" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="statusLabel" text="Active"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <!-- Created Date -->
+            <VBox spacing="4" GridPane.rowIndex="4" GridPane.columnIndex="0">
+                <Label text="Account Created" styleClass="detail-label"/>
+            </VBox>
+            <Label fx:id="createdAtLabel" text="2024-01-01 10:00:00"
+                   styleClass="detail-value"
+                   GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        </GridPane>
+
+    </VBox>
+
+    <!-- Action Buttons -->
+    <HBox spacing="12">
+        <VBox.margin>
+            <Insets top="8"/>
+        </VBox.margin>
+
+        <Button text="Change Password"
+                styleClass="btn-primary"
+                onAction="#handleChangePassword"/>
+    </HBox>
+
+</VBox>

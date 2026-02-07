@@ -1,173 +1,255 @@
 package app.staff;
 
 import app.db.DBConnection;
-import app.model.BillContext;
-import app.model.Patient;
-import app.model.PendingBillRow;
+import app.model.Bill;
+import app.model.BillItem;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
+import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.io.IOException;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class PendingBillsController implements DashboardAware {
 
+    @FXML
+    private TextField searchField;
+
+    @FXML
+    private TableView<Bill> table;
+
+    @FXML
+    private TableColumn<Bill, String> codeCol;
+
+    @FXML
+    private TableColumn<Bill, String> nameCol;
+
+    @FXML
+    private TableColumn<Bill, Double> totalCol;
+
+    @FXML
+    private TableColumn<Bill, String> timeCol;
+
     private StaffDashboardController dashboardController;
+    private ObservableList<Bill> billList = FXCollections.observableArrayList();
+
     @Override
     public void setDashboardController(StaffDashboardController controller) {
         this.dashboardController = controller;
     }
 
-    @FXML private TextField searchField;
-    @FXML private TableView<PendingBillRow> table;
-    @FXML private TableColumn<PendingBillRow, String> codeCol;
-    @FXML private TableColumn<PendingBillRow, String> nameCol;
-    @FXML private TableColumn<PendingBillRow, Double> totalCol;
-    @FXML private TableColumn<PendingBillRow, Object> timeCol;
-
-    private final ObservableList<PendingBillRow> data =
-            FXCollections.observableArrayList();
-
     @FXML
     public void initialize() {
+        // Set up table columns
+        codeCol.setCellValueFactory(new PropertyValueFactory<>("patientCode"));
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("patientName"));
+        totalCol.setCellValueFactory(new PropertyValueFactory<>("totalAmount"));
+        timeCol.setCellValueFactory(new PropertyValueFactory<>("billTime"));
 
-        codeCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getPatientCode()));
-        nameCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getPatientName()));
-        totalCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getTotalAmount()));
-        timeCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBillTime()));
+        // Format total column
+        totalCol.setCellFactory(col -> new TableCell<Bill, Double>() {
+            @Override
+            protected void updateItem(Double total, boolean empty) {
+                super.updateItem(total, empty);
+                if (empty || total == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f", total));
+                }
+            }
+        });
 
-        table.setItems(data);
+        table.setItems(billList);
+
+        // Load all pending bills on initialization
+        loadPendingBills();
     }
 
     @FXML
     private void handleSearch() {
+        String searchText = searchField.getText().trim();
 
-        data.clear();
+        if (searchText.isEmpty()) {
+            loadPendingBills();
+            return;
+        }
 
-        String key = "%" + searchField.getText() + "%";
+        billList.clear();
 
-        String sql = """
-            SELECT b.id, b.patient_code, p.full_name,
-                   b.total_amount, b.bill_time
-            FROM bills b
-            JOIN patients p ON p.patient_code = b.patient_code
-            WHERE b.status = 'DRAFT'
-              AND (p.full_name LIKE ? OR p.patient_code LIKE ?)
-        """;
+        String query = "SELECT b.id, b.patient_code, p.full_name, b.total_amount, b.bill_time, b.counter_no " +
+                "FROM bills b " +
+                "JOIN patients p ON b.patient_code = p.patient_code " +
+                "WHERE b.status = 'DRAFT' " +
+                "AND (b.patient_code LIKE ? OR p.full_name LIKE ?) " +
+                "ORDER BY b.bill_time DESC";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
 
-            ps.setString(1, key);
-            ps.setString(2, key);
+            String searchPattern = "%" + searchText + "%";
+            pstmt.setString(1, searchPattern);
+            pstmt.setString(2, searchPattern);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                data.add(new PendingBillRow(
+                Bill bill = new Bill(
                         rs.getInt("id"),
                         rs.getString("patient_code"),
                         rs.getString("full_name"),
                         rs.getDouble("total_amount"),
-                        rs.getTimestamp("bill_time")
-                ));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Patient fetchPatientByCode(String code) {
-
-        String sql = """
-        SELECT patient_code, full_name, gender, age, phone, address
-        FROM patients
-        WHERE patient_code = ?
-    """;
-
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, code);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return new Patient(
-                        rs.getString("patient_code"),
-                        rs.getString("full_name"),
-                        rs.getString("gender"),
-                        rs.getInt("age"),
-                        rs.getString("phone"),
-                        rs.getString("address")
+                        rs.getTimestamp("bill_time").toLocalDateTime(),
+                        rs.getString("counter_no")
                 );
+                billList.add(bill);
             }
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            showError("Error searching bills: " + e.getMessage());
             e.printStackTrace();
         }
-
-        return null;
     }
 
     @FXML
     private void handleEdit() {
+        Bill selectedBill = table.getSelectionModel().getSelectedItem();
 
-        PendingBillRow row = table.getSelectionModel().getSelectedItem();
-        if (row == null) return;
+        if (selectedBill == null) {
+            showError("Please select a bill to edit");
+            return;
+        }
 
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/staff/createBill.fxml")
-            );
+            // Load the CreateBill view
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/staff/createBill.fxml"));
+            Parent createBillView = loader.load();
 
-            Parent view = loader.load();
+            // Get the controller and pass the bill data for editing
             CreateBillController controller = loader.getController();
-            controller.setDashboardController(dashboardController); // 🔥 REQUIRED
-            Patient patient = fetchPatientByCode(row.getPatientCode());
-            controller.init(
-                    new BillContext(patient, row.getBillId())
-            );
-            dashboardController.loadViewWithContext(view);
+            controller.loadBillForEdit(selectedBill.getId());
 
-        } catch (Exception e) {
+            // Inject dashboard reference
+            if (controller instanceof DashboardAware) {
+                ((DashboardAware) controller).setDashboardController(dashboardController);
+            }
+
+            // Load the view in the dashboard's content area
+            if (dashboardController != null) {
+                dashboardController.loadViewInContentArea(createBillView);
+            }
+
+        } catch (IOException e) {
+            showError("Error loading edit view: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     @FXML
     private void handleFinal() {
+        Bill selectedBill = table.getSelectionModel().getSelectedItem();
 
-        PendingBillRow row = table.getSelectionModel().getSelectedItem();
-        if (row == null) return;
+        if (selectedBill == null) {
+            showError("Please select a bill to finalize");
+            return;
+        }
 
-        String sql = """
-            UPDATE bills
-            SET status = 'FINAL'
-            WHERE id = ?
-        """;
+        // Confirm action
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Confirm Final Bill");
+        confirmAlert.setHeaderText("Generate Final Bill");
+        confirmAlert.setContentText("Are you sure you want to generate the final bill for " +
+                selectedBill.getPatientName() + "?");
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        if (confirmAlert.showAndWait().get() != ButtonType.OK) {
+            return;
+        }
 
-            ps.setInt(1, row.getBillId());
-            ps.executeUpdate();
+        try {
+            // Update bill status to FINAL
+            updateBillStatus(selectedBill.getId(), "FINAL");
 
-            data.remove(row);
+            // Load the PreBill view
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/staff/preBill.fxml"));
+            Parent preBillView = loader.load();
 
-        } catch (Exception e) {
+            // Get the controller and pass the bill data
+            PreBillController controller = loader.getController();
+            controller.loadBillData(selectedBill.getId());
+
+            // Inject dashboard reference
+            if (controller instanceof DashboardAware) {
+                ((DashboardAware) controller).setDashboardController(dashboardController);
+            }
+
+            // Load the view in the dashboard's content area
+            if (dashboardController != null) {
+                dashboardController.loadViewInContentArea(preBillView);
+            }
+
+        } catch (IOException e) {
+            showError("Error loading prebill view: " + e.getMessage());
+            e.printStackTrace();
+        } catch (SQLException e) {
+            showError("Error updating bill status: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void loadPendingBills() {
+        billList.clear();
+
+        String query = "SELECT b.id, b.patient_code, p.full_name, b.total_amount, b.bill_time, b.counter_no " +
+                "FROM bills b " +
+                "JOIN patients p ON b.patient_code = p.patient_code " +
+                "WHERE b.status = 'DRAFT' " +
+                "ORDER BY b.bill_time DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Bill bill = new Bill(
+                        rs.getInt("id"),
+                        rs.getString("patient_code"),
+                        rs.getString("full_name"),
+                        rs.getDouble("total_amount"),
+                        rs.getTimestamp("bill_time").toLocalDateTime(),
+                        rs.getString("counter_no")
+                );
+                billList.add(bill);
+            }
+
+        } catch (SQLException e) {
+            showError("Error loading pending bills: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void updateBillStatus(int billId, String status) throws SQLException {
+        String query = "UPDATE bills SET status = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, status);
+            pstmt.setInt(2, billId);
+            pstmt.executeUpdate();
+
+        }
+    }
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

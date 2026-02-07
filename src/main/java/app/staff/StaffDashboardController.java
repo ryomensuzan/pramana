@@ -25,7 +25,7 @@ public class StaffDashboardController {
 
 
 
-    public void loadViewWithContext(Parent view) {
+    public void loadViewInContentArea(Parent view) {
             contentArea.getChildren().setAll(view);
         }
 

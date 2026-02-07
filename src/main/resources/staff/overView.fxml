@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="app.staff.OverviewController"
@@ -10,44 +11,69 @@
 
     <!-- HEADER -->
     <top>
-        <Label text="Staff Overview"
-               styleClass="label heading"
-               BorderPane.alignment="CENTER"/>
+        <VBox spacing="4">
+            <padding>
+                <Insets bottom="24"/>
+            </padding>
+            <Label text="Staff Overview"
+                   styleClass="label, heading"/>
+            <Label text="Daily performance metrics"
+                   styleClass="label, muted"/>
+        </VBox>
     </top>
 
     <center>
-        <GridPane hgap="20" vgap="20" alignment="CENTER">
+        <GridPane hgap="20" vgap="20" alignment="TOP_LEFT">
+            <padding>
+                <Insets top="8"/>
+            </padding>
 
+            <!-- Card 1: Patients Registered Today -->
             <VBox GridPane.rowIndex="0" GridPane.columnIndex="0"
-                  spacing="10"
-                  styleClass="content-area">
-                <Label text="Patients Registered Today"/>
+                  spacing="8"
+                  styleClass="card"
+                  prefWidth="280" prefHeight="120">
+                <Label text="Patients Registered Today"
+                       styleClass="metric-label"/>
                 <Label fx:id="todayPatientsLabel"
-                       styleClass="label heading"/>
+                       text="0"
+                       styleClass="metric-value"/>
             </VBox>
 
+            <!-- Card 2: Bills Finalized Today -->
             <VBox GridPane.rowIndex="0" GridPane.columnIndex="1"
-                  spacing="10"
-                  styleClass="content-area">
-                <Label text="Bills Finalized Today"/>
+                  spacing="8"
+                  styleClass="card"
+                  prefWidth="280" prefHeight="120">
+                <Label text="Bills Finalized Today"
+                       styleClass="metric-label"/>
                 <Label fx:id="todayBillsLabel"
-                       styleClass="label heading"/>
+                       text="0"
+                       styleClass="metric-value"/>
             </VBox>
 
+            <!-- Card 3: Today's Collection -->
             <VBox GridPane.rowIndex="1" GridPane.columnIndex="0"
-                  spacing="10"
-                  styleClass="content-area">
-                <Label text="Today's Collection"/>
+                  spacing="8"
+                  styleClass="card"
+                  prefWidth="280" prefHeight="120">
+                <Label text="Today's Collection"
+                       styleClass="metric-label"/>
                 <Label fx:id="todayCollectionLabel"
-                       styleClass="label heading"/>
+                       text="Rs. 0"
+                       styleClass="metric-value"/>
             </VBox>
 
+            <!-- Card 4: Active Services -->
             <VBox GridPane.rowIndex="1" GridPane.columnIndex="1"
-                  spacing="10"
-                  styleClass="content-area">
-                <Label text="Active Services"/>
+                  spacing="8"
+                  styleClass="card"
+                  prefWidth="280" prefHeight="120">
+                <Label text="Active Services"
+                       styleClass="metric-label"/>
                 <Label fx:id="activeServicesLabel"
-                       styleClass="label heading"/>
+                       text="0"
+                       styleClass="metric-value"/>
             </VBox>
 
         </GridPane>

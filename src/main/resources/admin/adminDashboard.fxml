@@ -26,12 +26,8 @@
                 <content>
                     <VBox spacing="8">
                         <Button fx:id="staffListBtn"
-                                text="Staff List"
-                                onAction="#openStaffList"
-                                styleClass="sub-nav"/>
-                        <Button fx:id="manageStaffBtn"
-                                text="Manage Staff"
-                                onAction="#openStaffStatus"
+                                text="Register Staff"
+                                onAction="#openRegisterStaff"
                                 styleClass="sub-nav"/>
                     </VBox>
                 </content>
@@ -52,35 +48,12 @@
                 </content>
             </TitledPane>
 
-            <TitledPane text="Settings" expanded="false">
-                <content>
-                    <VBox spacing="8">
-                        <Button fx:id="hospitalProfileBtn"
-                                text="Hospital Profile"
-                                onAction="#openHospitalProfile"
-                                styleClass="sub-nav"/>
-                        <Button fx:id="invoiceSettingsBtn"
-                                text="Invoice Settings"
-                                onAction="#openInvoiceSettings"
-                                styleClass="sub-nav"/>
-                        <Button fx:id="backupRestoreBtn"
-                                text="BackUp and Restore"
-                                onAction="#openBackupRestore"
-                                styleClass="sub-nav"/>
-                    </VBox>
-                </content>
-            </TitledPane>
-
             <TitledPane text="Profile" expanded="false">
                 <content>
                     <VBox spacing="8">
                         <Button fx:id="profileBtn"
                                 text="Profile"
                                 onAction="#openProfile"
-                                styleClass="sub-nav"/>
-                        <Button fx:id="changePasswordBtn"
-                                text="Change Password"
-                                onAction="#openChangePassword"
                                 styleClass="sub-nav"/>
                         <Button fx:id="logoutBtn"
                                 text="Logout"

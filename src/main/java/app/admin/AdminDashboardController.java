@@ -50,17 +50,10 @@ public class AdminDashboardController {
     }
 
     //  STAFF MANAGEMENT
-
     @FXML
-    private void openStaffList() {
+    private void openRegisterStaff() {
         setActive(staffListBtn);
-        loadView("/admin/staffList.fxml");
-    }
-
-    @FXML
-    private void openStaffStatus() {
-        setActive(manageStaffBtn);
-        loadView("/admin/staffStatus.fxml");
+        loadView("/admin/registerStaff.fxml");
     }
 
     //  SERVICES MANAGEMENT
@@ -76,36 +69,11 @@ public class AdminDashboardController {
         loadView("/admin/serviceCategory.fxml");
     }
 
-    // ================= SETTINGS =================
-    @FXML
-    private void openHospitalProfile()  {
-        setActive(hospitalProfileBtn);
-        loadView("/admin/hospitalProfile.fxml");
-    }
-
-    @FXML
-    private void openInvoiceSettings() {
-        setActive(invoiceSettingsBtn);
-        loadView("/admin/invoiceSettings.fxml");
-    }
-
-    @FXML
-    private void openBackupRestore() {
-        setActive(backupRestoreBtn);
-        loadView("/admin/backupRestore.fxml");
-    }
-
     // ================= PROFILE =================
     @FXML
     private void openProfile() {
         setActive(profileBtn);
         loadView("/admin/Profile.fxml");
-    }
-
-    @FXML
-    private void openChangePassword() {
-        setActive(changePasswordBtn);
-        loadView("/admin/changePassword.fxml");
     }
 
     //Logout

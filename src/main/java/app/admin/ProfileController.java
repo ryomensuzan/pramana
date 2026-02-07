@@ -1,9 +1,13 @@
-package app.staff;
+package app.admin;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ButtonType;
+import javafx.scene.layout.GridPane;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import app.db.DBConnection;
 import app.util.SessionManager;
@@ -95,7 +100,16 @@ public class ProfileController {
                 // Details section
                 usernameValue.setText(username);
                 roleValue.setText(role);
-                counterLabel.setText(counterNo != null && !counterNo.isEmpty() ? counterNo : "N/A");
+
+                // Counter number - N/A for admin
+                if (counterNo != null && !counterNo.isEmpty()) {
+                    counterLabel.setText(counterNo);
+                    counterLabel.getStyleClass().remove("detail-muted");
+                } else {
+                    counterLabel.setText("N/A (Admin Account)");
+                    counterLabel.getStyleClass().add("detail-muted");
+                }
+
                 statusLabel.setText(status == 1 ? "Active" : "Disabled");
                 createdAtLabel.setText(formatTimestamp(createdAt));
 
@@ -146,6 +160,103 @@ public class ProfileController {
     }
 
     /**
+     * Handle Change Password
+     */
+    @FXML
+    private void handleChangePassword() {
+        // Create custom dialog
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Change Password");
+        alert.setHeaderText("Update your password");
+        alert.setContentText("Please enter your current and new password:");
+
+        // Create password fields
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        PasswordField currentPasswordField = new PasswordField();
+        currentPasswordField.setPromptText("Current Password");
+        PasswordField newPasswordField = new PasswordField();
+        newPasswordField.setPromptText("New Password");
+        PasswordField confirmPasswordField = new PasswordField();
+        confirmPasswordField.setPromptText("Confirm New Password");
+
+        grid.add(new Label("Current Password:"), 0, 0);
+        grid.add(currentPasswordField, 1, 0);
+        grid.add(new Label("New Password:"), 0, 1);
+        grid.add(newPasswordField, 1, 1);
+        grid.add(new Label("Confirm Password:"), 0, 2);
+        grid.add(confirmPasswordField, 1, 2);
+
+        alert.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            String currentPassword = currentPasswordField.getText();
+            String newPassword = newPasswordField.getText();
+            String confirmPassword = confirmPasswordField.getText();
+
+            // Validation
+            if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                showError("Validation Error", "All fields are required!");
+                return;
+            }
+
+            if (!newPassword.equals(confirmPassword)) {
+                showError("Validation Error", "New passwords do not match!");
+                return;
+            }
+
+            if (newPassword.length() < 4) {
+                showError("Validation Error", "Password must be at least 4 characters long!");
+                return;
+            }
+
+            // Update password in database
+            updatePassword(currentPassword, newPassword);
+        }
+    }
+
+    /**
+     * Update password in database
+     */
+    private void updatePassword(String currentPassword, String newPassword) {
+        String username = SessionManager.getLoggedInUser();
+
+        // First verify current password
+        String verifyQuery = "SELECT id FROM users WHERE username = ? AND password = ?";
+        String updateQuery = "UPDATE users SET password = ? WHERE username = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement verifyStmt = conn.prepareStatement(verifyQuery)) {
+
+            verifyStmt.setString(1, username);
+            verifyStmt.setString(2, currentPassword);
+            ResultSet rs = verifyStmt.executeQuery();
+
+            if (!rs.next()) {
+                showError("Authentication Error", "Current password is incorrect!");
+                return;
+            }
+
+            // Current password is correct, update to new password
+            try (PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
+                updateStmt.setString(1, newPassword);
+                updateStmt.setString(2, username);
+                updateStmt.executeUpdate();
+
+                showSuccess("Password Changed", "Your password has been updated successfully!");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showError("Database Error", "Failed to update password: " + e.getMessage());
+        }
+    }
+
+    /**
      * Show error alert dialog
      */
     private void showError(String title, String message) {
@@ -156,21 +267,14 @@ public class ProfileController {
         alert.showAndWait();
     }
 
-    @FXML
-    private void handleEditProfile() {
+    /**
+     * Show success alert dialog
+     */
+    private void showSuccess(String title, String message) {
         Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Edit Profile");
+        alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText("Edit profile feature coming soon!");
-        alert.showAndWait();
-    }
-
-    @FXML
-    private void handleChangePassword() {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Change Password");
-        alert.setHeaderText(null);
-        alert.setContentText("Change password feature coming soon!");
+        alert.setContentText(message);
         alert.showAndWait();
     }
 }

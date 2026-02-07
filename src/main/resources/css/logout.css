@@ -1,0 +1,24 @@
+/* ===============================
+   LOGOUT PAGE STYLES
+   =============================== */
+
+.logout-container {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 20, 0, 0, 8);
+}
+
+.logout-icon {
+    -fx-font-size: 48px;
+}
+
+.logout-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0f172a;
+}
+
+.logout-message {
+    -fx-font-size: 14px;
+    -fx-text-fill: #64748b;
+}
