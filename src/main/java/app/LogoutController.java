@@ -9,14 +9,10 @@ import javafx.stage.Stage;
 import javafx.event.ActionEvent;
 
 public class LogoutController {
-
-    /**
-     * Handle logout confirmation
-     */
     @FXML
     public void confirmLogout(ActionEvent event) {
         try {
-            System.out.println("🔓 Logging out user: " + SessionManager.getInstance().getUsername());
+            System.out.println("Logging out user: " + SessionManager.getInstance().getUsername());
 
             // Clear session
             SessionManager.clearSession();
@@ -36,23 +32,22 @@ public class LogoutController {
             stage.setScene(scene);
             stage.setTitle("Login - Pramanā Prebilling");
 
-            System.out.println("✅ Logged out successfully!");
+            System.out.println("Logged out successfully!");
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("❌ Error during logout: " + e.getMessage());
+            System.err.println("Error during logout: " + e.getMessage());
         }
     }
 
-    /**
-     * Handle cancel - close the logout dialog/window
-     */
+     // Handle cancel - close the logout dialog/window
+
     @FXML
     public void cancel(ActionEvent event) {
         // Close the current window/stage
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.close();
 
-        System.out.println("ℹ️ Logout cancelled");
+        System.out.println("Logout cancelled");
     }
 }

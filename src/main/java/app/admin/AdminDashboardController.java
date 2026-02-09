@@ -13,15 +13,10 @@ import java.util.Objects;
 
 public class AdminDashboardController {
 
-    public Button manageStaffBtn;
     public Button staffListBtn;
     public Button manageServiceBtn;
     public Button serviceCategoryBtn;
-    public Button hospitalProfileBtn;
-    public Button invoiceSettingsBtn;
-    public Button backupRestoreBtn;
     public Button profileBtn;
-    public Button changePasswordBtn;
     public Button logoutBtn;
 
     @FXML

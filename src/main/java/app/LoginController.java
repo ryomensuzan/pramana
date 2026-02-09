@@ -1,5 +1,4 @@
 package app;
-
 import app.db.DBConnection;
 import app.util.SessionManager;
 import javafx.fxml.FXML;
@@ -9,7 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,7 +39,7 @@ public class LoginController {
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            System.out.println("✅ Database connected successfully!");
+            System.out.println("Database connected successfully!");
 
             ps.setString(1, username);
             ps.setString(2, password);
@@ -70,10 +68,10 @@ public class LoginController {
                     return;
                 }
 
-                // ✅ SET SESSION - This is the critical step!
+                // Setting session and check who is logged in. This is the critical step!
                 SessionManager.setSession(userId, dbUsername, role, counterNo);
 
-                System.out.println("Login successful ➡️ " + role);
+                System.out.println("Login successful: " + role);
                 System.out.println("Session created for: " + dbUsername + " (ID: " + userId + ")");
 
                 // Verify session was set correctly
@@ -101,6 +99,7 @@ public class LoginController {
         }
     }
 
+    // admin dashboard logic
     private void loadAdminDashboard() {
         try {
             FXMLLoader loader = new FXMLLoader(
@@ -120,7 +119,7 @@ public class LoginController {
             errorLabel.setText("Failed to load admin dashboard");
         }
     }
-
+    // staff dashboard logic
     private void loadStaffDashboard() {
         try {
             FXMLLoader loader = new FXMLLoader(

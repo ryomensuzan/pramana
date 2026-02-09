@@ -13,7 +13,7 @@
 
                 <!-- Hospital Header -->
                 <VBox alignment="CENTER" spacing="5">
-                    <Label text="PRAMANA HOSPITAL"
+                    <Label text="ABC XYZ HOSPITAL"
                            style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
                     <Label text="Billing Department"
                            style="-fx-font-size: 15px;"/>

@@ -12,9 +12,9 @@ public class Main extends Application {
     public void start(Stage stage) throws Exception {
 
         FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/login.fxml")
+//                getClass().getResource("/login.fxml")
                 //Below fxml are for testing purpose only
-//                getClass().getResource("/staff/staffDashboard.fxml")
+                getClass().getResource("/staff/staffDashboard.fxml")
 //                getClass().getResource("/admin/adminDashboard.fxml")
         );
 

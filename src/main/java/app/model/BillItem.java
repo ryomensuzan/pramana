@@ -1,5 +1,4 @@
 package app.model;
-
 import javafx.beans.property.*;
 
 public class BillItem {
