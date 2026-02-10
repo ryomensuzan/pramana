@@ -1,8 +1,6 @@
 package app.admin;
-
 import app.db.DBConnection;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
+import app.model.ServiceCategory;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,7 +8,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-
 import java.sql.*;
 import java.util.Optional;
 
@@ -308,37 +305,5 @@ public class ServiceCategoryController {
         messageLabel.setText(message);
         messageLabel.getStyleClass().removeAll("success", "error", "info");
         messageLabel.getStyleClass().add(type);
-    }
-
-    // ========================================
-    // SERVICE CATEGORY MODEL CLASS
-    // ========================================
-    public static class ServiceCategory {
-        private final SimpleIntegerProperty id;
-        private final SimpleStringProperty categoryName;
-        private final SimpleStringProperty description;
-        private final SimpleStringProperty status;
-
-        public ServiceCategory(int id, String categoryName, String description, String status) {
-            this.id = new SimpleIntegerProperty(id);
-            this.categoryName = new SimpleStringProperty(categoryName);
-            this.description = new SimpleStringProperty(description != null ? description : "");
-            this.status = new SimpleStringProperty(status);
-        }
-
-        // Getters
-        public int getId() { return id.get(); }
-        public String getCategoryName() { return categoryName.get(); }
-        public String getDescription() {
-            String desc = description.get();
-            return desc.isEmpty() ? null : desc;
-        }
-        public String getStatus() { return status.get(); }
-
-        // Property getters (for TableView binding)
-        public SimpleIntegerProperty idProperty() { return id; }
-        public SimpleStringProperty categoryNameProperty() { return categoryName; }
-        public SimpleStringProperty descriptionProperty() { return description; }
-        public SimpleStringProperty statusProperty() { return status; }
     }
 }

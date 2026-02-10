@@ -1,9 +1,7 @@
 package app.admin;
-
 import app.db.DBConnection;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
+import app.model.Service;
+import app.model.ServiceCategory;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,7 +9,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-
 import java.sql.*;
 import java.util.Optional;
 
@@ -52,7 +49,7 @@ public class ManageServiceController {
 
     private ObservableList<Service> serviceList = FXCollections.observableArrayList();
     private ObservableList<ServiceCategory> categoryList = FXCollections.observableArrayList();
-    private Integer selectedServiceId = null; // For update mode
+    private Integer selectedServiceId = null;
 
     @FXML
     public void initialize() {
@@ -61,9 +58,6 @@ public class ManageServiceController {
         loadServices();
     }
 
-    /**
-     * Setup table columns
-     */
     private void setupTableColumns() {
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("categoryName"));
@@ -131,12 +125,10 @@ public class ManageServiceController {
         });
     }
 
-    /**
-     * Load active categories into ComboBox
-     */
     private void loadCategories() {
         categoryList.clear();
-        String query = "SELECT id, category_name FROM service_category WHERE status = 'ACTIVE' ORDER BY category_name";
+        String query = "SELECT id, category_name FROM service_category " +
+                "WHERE status = 'ACTIVE' ORDER BY category_name";
 
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -158,13 +150,10 @@ public class ManageServiceController {
         }
     }
 
-    /**
-     * Load all services from database
-     */
     private void loadServices() {
         serviceList.clear();
         String query = """
-            SELECT s.id, s.service_name, s.price, s.status, 
+            SELECT s.id, s.service_name, s.price, s.status,
                    sc.category_name, s.category_id
             FROM services s
             JOIN service_category sc ON s.category_id = sc.id
@@ -195,9 +184,6 @@ public class ManageServiceController {
         }
     }
 
-    /**
-     * Handle Save Service (Create or Update)
-     */
     @FXML
     private void handleSaveService() {
         ServiceCategory selectedCategory = categoryComboBox.getValue();
@@ -233,19 +219,15 @@ public class ManageServiceController {
         }
 
         if (selectedServiceId == null) {
-            // CREATE new service
             createService(selectedCategory.getId(), serviceName, price);
         } else {
-            // UPDATE existing service
             updateService(selectedServiceId, selectedCategory.getId(), serviceName, price);
         }
     }
 
-    /**
-     * Create new service
-     */
     private void createService(int categoryId, String serviceName, double price) {
-        String sql = "INSERT INTO services (category_id, service_name, price, status) VALUES (?, ?, ?, 'ACTIVE')";
+        String sql = "INSERT INTO services (category_id, service_name, price, status) " +
+                "VALUES (?, ?, ?, 'ACTIVE')";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -265,11 +247,10 @@ public class ManageServiceController {
         }
     }
 
-    /**
-     * Update existing service
-     */
-    private void updateService(int serviceId, int categoryId, String serviceName, double price) {
-        String sql = "UPDATE services SET category_id = ?, service_name = ?, price = ? WHERE id = ?";
+    private void updateService(int serviceId, int categoryId,
+                               String serviceName, double price) {
+        String sql = "UPDATE services SET category_id = ?, " +
+                "service_name = ?, price = ? WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -290,13 +271,9 @@ public class ManageServiceController {
         }
     }
 
-    /**
-     * Handle Update button click - populate form
-     */
     private void handleUpdateService(Service service) {
         selectedServiceId = service.getId();
 
-        // Find and select the category in ComboBox
         for (ServiceCategory category : categoryList) {
             if (category.getId() == service.getCategoryId()) {
                 categoryComboBox.setValue(category);
@@ -309,9 +286,6 @@ public class ManageServiceController {
         showMessage("Update mode - Modify and click Save", "info");
     }
 
-    /**
-     * Handle Toggle Status (Activate/Deactivate)
-     */
     private void handleToggleStatus(Service service) {
         String currentStatus = service.getStatus();
         String newStatus = "ACTIVE".equalsIgnoreCase(currentStatus) ? "INACTIVE" : "ACTIVE";
@@ -320,7 +294,8 @@ public class ManageServiceController {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Action");
         confirm.setHeaderText(null);
-        confirm.setContentText("Are you sure you want to " + action + " service: " + service.getServiceName() + "?");
+        confirm.setContentText("Are you sure you want to " + action +
+                " service: " + service.getServiceName() + "?");
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -343,9 +318,6 @@ public class ManageServiceController {
         }
     }
 
-    /**
-     * Clear form fields
-     */
     @FXML
     private void handleClear() {
         selectedServiceId = null;
@@ -355,69 +327,9 @@ public class ManageServiceController {
         messageLabel.setText("");
     }
 
-    /**
-     * Show message to user
-     */
     private void showMessage(String message, String type) {
         messageLabel.setText(message);
         messageLabel.getStyleClass().removeAll("success", "error", "info");
         messageLabel.getStyleClass().add(type);
-    }
-
-    // ========================================
-    // SERVICE CATEGORY MODEL (for ComboBox)
-    // ========================================
-    public static class ServiceCategory {
-        private final int id;
-        private final String categoryName;
-
-        public ServiceCategory(int id, String categoryName) {
-            this.id = id;
-            this.categoryName = categoryName;
-        }
-
-        public int getId() { return id; }
-        public String getCategoryName() { return categoryName; }
-
-        @Override
-        public String toString() {
-            return categoryName; // Display in ComboBox
-        }
-    }
-
-    // ========================================
-    // SERVICE MODEL CLASS
-    // ========================================
-    public static class Service {
-        private final SimpleIntegerProperty id;
-        private final SimpleIntegerProperty categoryId;
-        private final SimpleStringProperty categoryName;
-        private final SimpleStringProperty serviceName;
-        private final SimpleDoubleProperty price;
-        private final SimpleStringProperty status;
-
-        public Service(int id, int categoryId, String categoryName, String serviceName, double price, String status) {
-            this.id = new SimpleIntegerProperty(id);
-            this.categoryId = new SimpleIntegerProperty(categoryId);
-            this.categoryName = new SimpleStringProperty(categoryName);
-            this.serviceName = new SimpleStringProperty(serviceName);
-            this.price = new SimpleDoubleProperty(price);
-            this.status = new SimpleStringProperty(status);
-        }
-
-        // Getters
-        public int getId() { return id.get(); }
-        public int getCategoryId() { return categoryId.get(); }
-        public String getCategoryName() { return categoryName.get(); }
-        public String getServiceName() { return serviceName.get(); }
-        public double getPrice() { return price.get(); }
-        public String getStatus() { return status.get(); }
-
-        // Property getters (for TableView binding)
-        public SimpleIntegerProperty idProperty() { return id; }
-        public SimpleStringProperty categoryNameProperty() { return categoryName; }
-        public SimpleStringProperty serviceNameProperty() { return serviceName; }
-        public SimpleDoubleProperty priceProperty() { return price; }
-        public SimpleStringProperty statusProperty() { return status; }
     }
 }

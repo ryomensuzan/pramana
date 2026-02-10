@@ -64,7 +64,7 @@ public class AdminDashboardController {
         loadView("/admin/serviceCategory.fxml");
     }
 
-    // ================= PROFILE =================
+    // PROFILE
     @FXML
     private void openProfile() {
         setActive(profileBtn);
