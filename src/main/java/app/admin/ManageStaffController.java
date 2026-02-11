@@ -1,7 +1,6 @@
 package app.admin;
 import app.db.DBConnection;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
+import app.model.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -59,9 +58,7 @@ public class ManageStaffController {
         loadUsers();
     }
 
-    /**
-     * Setup table columns
-     */
+     // Setup table columns
     private void setupTableColumns() {
         userTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -107,9 +104,7 @@ public class ManageStaffController {
         });
     }
 
-    /**
-     * Load all users from database
-     */
+    //Load all users from database
     private void loadUsers() {
         userList.clear();
         String query = "SELECT id, counter_no, username, password, role, status FROM users ORDER BY id";
@@ -137,10 +132,7 @@ public class ManageStaffController {
             showMessage("Error loading users: " + e.getMessage(), "error");
         }
     }
-
-    /**
-     * Handle Save User (Create or Update)
-     */
+    // Handle Save User (Create or Update)
     @FXML
     private void handleSaveUser() {
         String counterNo = counterField.getText().trim();
@@ -175,9 +167,7 @@ public class ManageStaffController {
         }
     }
 
-    /**
-     * Create new user
-     */
+    //Create new user
     private void createUser(String counterNo, String username, String password, String role) {
         String sql = "INSERT INTO users (counter_no, username, password, role, status) VALUES (?, ?, ?, ?, 1)";
 
@@ -208,9 +198,7 @@ public class ManageStaffController {
         }
     }
 
-    /**
-     * Update existing user
-     */
+    //Update existing user
     private void updateUser(int userId, String counterNo, String username, String password, String role) {
         String sql = "UPDATE users SET counter_no = ?, username = ?, password = ?, role = ? WHERE id = ?";
 
@@ -242,9 +230,7 @@ public class ManageStaffController {
         }
     }
 
-    /**
-     * Handle Update button click - populate form
-     */
+    //Handle Update button click - populate form
     private void handleUpdateUser(User user) {
         selectedUserId = user.getId();
         counterField.setText(user.getCounterNo() != null ? user.getCounterNo() : "");
@@ -253,9 +239,7 @@ public class ManageStaffController {
         showMessage("Update mode - Modify and click Save", "info");
     }
 
-    /**
-     * Handle Toggle Status (Enable/Disable)
-     */
+    //Handle Toggle Status (Enable/Disable)
     private void handleToggleStatus(User user) {
         String action = user.getStatus() == 1 ? "disable" : "enable";
 
@@ -286,9 +270,7 @@ public class ManageStaffController {
         }
     }
 
-    /**
-     * Clear form fields
-     */
+    //Clear form fields
     @FXML
     private void handleClear() {
         selectedUserId = null;
@@ -298,60 +280,10 @@ public class ManageStaffController {
         messageLabel.setText("");
     }
 
-    /**
-     * Show message to user
-     */
+    //Show message to user
     private void showMessage(String message, String type) {
         messageLabel.setText(message);
         messageLabel.getStyleClass().removeAll("success", "error", "info");
         messageLabel.getStyleClass().add(type);
-    }
-
-    // ========================================
-    // USER MODEL CLASS
-    // ========================================
-    public static class User {
-        private final SimpleIntegerProperty id;
-        private final SimpleStringProperty counterNo;
-        private final SimpleStringProperty username;
-        private final SimpleStringProperty password;
-        private final SimpleStringProperty role;
-        private final SimpleIntegerProperty status;
-
-        public User(int id, String counterNo, String username, String password, String role, int status) {
-            this.id = new SimpleIntegerProperty(id);
-            this.counterNo = new SimpleStringProperty(counterNo != null ? counterNo : "N/A");
-            this.username = new SimpleStringProperty(username);
-            this.password = new SimpleStringProperty(password);
-            this.role = new SimpleStringProperty(role);
-            this.status = new SimpleIntegerProperty(status);
-        }
-
-        // Getters for properties
-        public int getId() { return id.get(); }
-        public String getCounterNo() {
-            String val = counterNo.get();
-            return val.equals("N/A") ? null : val;
-        }
-        public String getUsername() { return username.get(); }
-        public String getPassword() { return password.get(); }
-        public String getRole() { return role.get(); }
-        public int getStatus() { return status.get(); }
-
-        // Masked password (for display)
-        public String getMaskedPassword() {
-            return "••••••••";
-        }
-
-        // Status as text
-        public String getStatusText() {
-            return status.get() == 1 ? "Active" : "Disabled";
-        }
-
-        // Property getters (for TableView binding)
-        public SimpleIntegerProperty idProperty() { return id; }
-        public SimpleStringProperty counterNoProperty() { return counterNo; }
-        public SimpleStringProperty usernameProperty() { return username; }
-        public SimpleStringProperty roleProperty() { return role; }
     }
 }
