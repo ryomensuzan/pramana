@@ -57,9 +57,7 @@ public class ProfileController {
         loadUserProfile();
     }
 
-    /**
-     * Load logged-in user profile from database
-     */
+    // Load logged-in user profile from database
     private void loadUserProfile() {
         // Get logged-in user from session
         String loggedInUsername = SessionManager.getLoggedInUser();
@@ -123,9 +121,8 @@ public class ProfileController {
         }
     }
 
-    /**
-     * Update status badge styling based on status
-     */
+
+    // Update status badge styling based on status
     private void updateStatusBadge(int status) {
         if (status == 1) {
             statusBadge.setText("● Active");
@@ -142,9 +139,7 @@ public class ProfileController {
         }
     }
 
-    /**
-     * Format Timestamp for better readability
-     */
+    // Format Timestamp for better readability
     private String formatTimestamp(Timestamp timestamp) {
         if (timestamp == null) {
             return "N/A";
@@ -159,9 +154,7 @@ public class ProfileController {
         }
     }
 
-    /**
-     * Handle Change Password
-     */
+    //Handle Change Password
     @FXML
     private void handleChangePassword() {
         // Create custom dialog
@@ -219,9 +212,7 @@ public class ProfileController {
         }
     }
 
-    /**
-     * Update password in database
-     */
+    //Update password in database
     private void updatePassword(String currentPassword, String newPassword) {
         String username = SessionManager.getLoggedInUser();
 
@@ -256,9 +247,7 @@ public class ProfileController {
         }
     }
 
-    /**
-     * Show error alert dialog
-     */
+    //Show error alert dialog
     private void showError(String title, String message) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle(title);
@@ -267,9 +256,7 @@ public class ProfileController {
         alert.showAndWait();
     }
 
-    /**
-     * Show success alert dialog
-     */
+    // Show success alert dialog
     private void showSuccess(String title, String message) {
         Alert alert = new Alert(AlertType.INFORMATION);
         alert.setTitle(title);
