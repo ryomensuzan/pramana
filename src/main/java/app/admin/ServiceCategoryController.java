@@ -48,10 +48,7 @@ public class ServiceCategoryController {
         setupTableColumns();
         loadCategories();
     }
-
-    /**
-     * Setup table columns
-     */
+    // Setup table columns
     private void setupTableColumns() {
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("categoryName"));
@@ -105,9 +102,7 @@ public class ServiceCategoryController {
         });
     }
 
-    /**
-     * Load all categories from database
-     */
+    //Load all categories from database
     private void loadCategories() {
         categoryList.clear();
         String query = "SELECT id, category_name, description, status FROM service_category ORDER BY id";
@@ -134,9 +129,7 @@ public class ServiceCategoryController {
         }
     }
 
-    /**
-     * Handle Save Category (Create or Update)
-     */
+    //Handle Save Category (Create or Update)
     @FXML
     private void handleSaveCategory() {
         String categoryName = categoryNameField.getText().trim();
@@ -157,9 +150,7 @@ public class ServiceCategoryController {
         }
     }
 
-    /**
-     * Create new category
-     */
+    //Create new category
     private void createCategory(String categoryName, String description) {
         String sql = "INSERT INTO service_category (category_name, description, status) VALUES (?, ?, 'ACTIVE')";
 
@@ -182,9 +173,7 @@ public class ServiceCategoryController {
         }
     }
 
-    /**
-     * Update existing category
-     */
+    //Update existing category
     private void updateCategory(int categoryId, String categoryName, String description) {
         String sql = "UPDATE service_category SET category_name = ?, description = ? WHERE id = ?";
 
@@ -208,9 +197,7 @@ public class ServiceCategoryController {
         }
     }
 
-    /**
-     * Handle Update button click - populate form
-     */
+    //Handle Update button click - populate form
     private void handleUpdateCategory(ServiceCategory category) {
         selectedCategoryId = category.getId();
         categoryNameField.setText(category.getCategoryName());
@@ -218,9 +205,7 @@ public class ServiceCategoryController {
         showMessage("Update mode - Modify and click Save", "info");
     }
 
-    /**
-     * Handle Toggle Status (Activate/Deactivate)
-     */
+    //Handle Toggle Status (Activate/Deactivate)
     private void handleToggleStatus(ServiceCategory category) {
         String currentStatus = category.getStatus();
         String newStatus = "ACTIVE".equalsIgnoreCase(currentStatus) ? "INACTIVE" : "ACTIVE";
@@ -264,9 +249,7 @@ public class ServiceCategoryController {
         }
     }
 
-    /**
-     * Check if category has active services
-     */
+    // Check if category has active services
     private boolean hasActiveServices(int categoryId) {
         String query = "SELECT COUNT(*) FROM services WHERE category_id = ? AND status = 'ACTIVE'";
 
@@ -287,9 +270,7 @@ public class ServiceCategoryController {
         return false;
     }
 
-    /**
-     * Clear form fields
-     */
+    // Clear form fields
     @FXML
     private void handleClear() {
         selectedCategoryId = null;
@@ -298,9 +279,7 @@ public class ServiceCategoryController {
         messageLabel.setText("");
     }
 
-    /**
-     * Show message to user
-     */
+    // Show message to user
     private void showMessage(String message, String type) {
         messageLabel.setText(message);
         messageLabel.getStyleClass().removeAll("success", "error", "info");
